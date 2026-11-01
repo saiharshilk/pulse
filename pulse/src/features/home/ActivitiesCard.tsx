@@ -1,0 +1,107 @@
+import { Ionicons } from '@expo/vector-icons';
+import type { ComponentProps, ReactNode } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+
+import { Card } from '@/components/Card';
+import { SectionHeader } from '@/components/SectionHeader';
+import { colors } from '@/theme/colors';
+import { layout } from '@/theme/layout';
+import { spacing } from '@/theme/spacing';
+import { typography } from '@/theme/typography';
+
+import type { HomeView } from './homeView';
+
+type RowProps = {
+  icon: ComponentProps<typeof Ionicons>['name'];
+  iconColor: string;
+  title: string;
+  timeRange: string;
+  duration: string;
+  tag?: string;
+  badge?: ReactNode;
+};
+
+function ActivityRow({ icon, iconColor, title, timeRange, duration, tag, badge }: RowProps) {
+  return (
+    <View style={styles.row}>
+      <View style={styles.iconCircle}>
+        <Ionicons name={icon} size={18} color={iconColor} />
+      </View>
+      <View style={styles.rowText}>
+        <View style={styles.titleLine}>
+          <Text style={typography.labelCaps} numberOfLines={1}>
+            {title}
+          </Text>
+          {tag !== undefined && <Text style={styles.tag}>{tag}</Text>}
+        </View>
+        <Text style={typography.caption}>{timeRange}</Text>
+      </View>
+      <Text style={typography.metricValue}>{duration}</Text>
+      {badge}
+    </View>
+  );
+}
+
+type ActivitiesCardProps = Pick<HomeView, 'activitiesTitle' | 'sleepRow' | 'activityRows' | 'activitiesEmptyText'>;
+
+export function ActivitiesCard({ activitiesTitle, sleepRow, activityRows, activitiesEmptyText }: ActivitiesCardProps) {
+  return (
+    <Card style={styles.card}>
+      <SectionHeader
+        title={activitiesTitle}
+        right={<Ionicons name="expand-outline" size={16} color={colors.textSecondary} />}
+      />
+      {sleepRow !== null && (
+        <ActivityRow
+          icon="moon"
+          iconColor={colors.sleep}
+          title="Sleep"
+          timeRange={sleepRow.timeRange}
+          duration={sleepRow.duration}
+          tag="EST."
+        />
+      )}
+      {activityRows.map((row) => (
+        <ActivityRow
+          key={row.id}
+          icon="walk"
+          iconColor={colors.strain}
+          title={row.name}
+          timeRange={row.timeRange}
+          duration={row.duration}
+          badge={
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{row.strain}</Text>
+            </View>
+          }
+        />
+      ))}
+      {activityRows.length === 0 && <Text style={typography.caption}>{activitiesEmptyText}</Text>}
+    </Card>
+  );
+}
+
+const styles = StyleSheet.create({
+  card: { gap: spacing.lg },
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  iconCircle: {
+    width: layout.iconCircle,
+    height: layout.iconCircle,
+    borderRadius: layout.iconCircle / 2,
+    backgroundColor: colors.iconCircle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rowText: { flex: 1, gap: 2 },
+  titleLine: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  tag: { fontSize: 10, fontWeight: '700', letterSpacing: 1, color: colors.textSecondary },
+  badge: {
+    width: layout.strainBadgeSize,
+    height: layout.strainBadgeSize,
+    borderRadius: 6,
+    backgroundColor: colors.strain,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: { fontSize: 13, fontWeight: '700', fontVariant: ['tabular-nums'], color: colors.textPrimary },
+});

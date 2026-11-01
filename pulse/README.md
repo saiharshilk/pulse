@@ -1,56 +1,81 @@
-# Welcome to your Expo app 👋
+# PULSE
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A personal iPhone app with a dark, data-dense, three-dial look, powered by a $20 Colmi R02 smart
+ring. Until the real ring is connected (Prompt 5), it runs on realistic mock data generated on the phone.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run it
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Scan the QR code with your iPhone camera to open the app in Expo Go.
 
-### Other setup steps
+```bash
+npx tsc --noEmit   # typecheck
+npx jest           # tests
+npx expo-doctor    # project health
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Architecture
 
-## Learn more
+```
+RingDataProvider (interface)
+ ├─ MockRingProvider     used now, always available in Expo Go
+ └─ ColmiRingProvider    stub until Prompt 5 (Bluetooth)
+        │  raw readings (RingSyncBatch)
+        ▼
+syncService      drops 0-bpm readings, de-duplicates, saves to SQLite
+        ▼
+scoring engine   raw samples + profile → one DailySummary per day (pure functions)
+        ▼
+zustand store    summaries, selected day, device status
+        ▼
+screen hooks     format values into display strings → screens and components
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+- Providers return raw, ring-shaped data only: heart-rate readings and step buckets. Sleep and
+  scores always come from the scoring engine, so the same pipeline runs with the real ring.
+- Screens never call a provider. History flows through `syncService`; connection state, battery,
+  live streams and ring commands go through `deviceManager`.
+- Screens never format numbers. Each screen has a hook in `src/features/<screen>/`.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## How the data source works
 
-## Join the community
+`src/config/appConfig.ts` sets `DATA_SOURCE` (`'mock'` or `'ring'`, default `'mock'`), and
+`getProvider()` in `src/data/providers/index.ts` picks the provider. That is the only thing that
+changes when the real ring arrives.
 
-Join our community of developers creating universal apps.
+Mock data is deterministic: each day's hidden plan depends only on `MOCK_SEED` and the date, so past
+days stay the same as time moves on. The plan is used only to shape heart-rate and step readings. The
+app has to estimate sleep from those readings, exactly as it will with the real ring.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+To start over with fresh data, delete Expo Go's data for the app or reinstall Expo Go.
+
+## Folder map
+
+```
+app/                 Expo Router routes (thin files)
+src/config/          appConfig: app name, mock seed, data source
+src/theme/           colors, typography, spacing, layout
+src/components/      shared UI: ScoreDial, Card, FloatingTabBar, charts/Sparkline, ...
+src/types/           raw, provider, computed, profile
+src/data/providers/  RingDataProvider, MockRingProvider, ColmiRingProvider
+src/data/mock/       seeded random, day plans, generator (mockTruth is test-only)
+src/data/db/         SQLite setup and repositories
+src/data/            syncService, syncFilters, deviceManager
+src/scoring/         sleep, recovery, strain, activities, calories, health monitor, engine
+src/store/           zustand app store
+src/features/        one folder per screen (home, appInit, ...)
+src/utils/           format, time, series, haptics
+__tests__/           Jest tests for pure logic
+```
+
+## Status
+
+**Prompt 1 (done):** foundation, full scoring engine, design system, tab shell, and the Home screen on
+mock data. Health, Device, Live, Sleep, Recovery, Strain and Health Monitor are placeholders for now.
+
+PULSE's scores are simple, explainable approximations, and every number is in
+`src/scoring/scoringConstants.ts`.
