@@ -10,22 +10,42 @@ export type HealthMonitorInput = {
   lastSpO2: SpO2SpotCheck | null;
 };
 
-function isInRange(value: number, mean: number, sd: number): boolean {
-  return Math.abs(value - mean) <= HEALTH_MONITOR.rangeSd * sd;
+// A personal normal range: the 30-day mean ± 1.5 SD.
+export type NormalRange = { low: number; high: number };
+
+export type HealthMonitorRanges = { restingHR: NormalRange; sleepingHR: NormalRange };
+
+export function normalRange(mean: number, sd: number): NormalRange {
+  return { low: mean - HEALTH_MONITOR.rangeSd * sd, high: mean + HEALTH_MONITOR.rangeSd * sd };
 }
 
+export function isWithinRange(value: number, range: NormalRange): boolean {
+  return value >= range.low && value <= range.high;
+}
+
+// Both normal ranges, or null while calibrating (fewer than 4 earlier nights).
+export function healthMonitorRanges(priorNights: NightVitals[]): HealthMonitorRanges | null {
+  const baseline = calculateBaseline(priorNights);
+  if (baseline === null || priorNights.length < HEALTH_MONITOR.minNights) return null;
+  return {
+    restingHR: normalRange(baseline.restingHRMean, baseline.restingHRSd),
+    sleepingHR: normalRange(baseline.sleepingHRMean, baseline.sleepingHRSd),
+  };
+}
+
+// SpO2 is shown but never counted here: it's a spot check, not measured every night.
 export function calculateHealthMonitor({ lastNight, priorNights, lastSpO2 }: HealthMonitorInput): HealthMonitorStatus {
   const restingHR = lastNight === null ? null : lastNight.restingHR;
   const averageSleepingHR = lastNight === null ? null : lastNight.averageSleepingHR;
-  const baseline = calculateBaseline(priorNights);
+  const ranges = healthMonitorRanges(priorNights);
 
-  if (lastNight === null || baseline === null || priorNights.length < HEALTH_MONITOR.minNights) {
+  if (lastNight === null || ranges === null) {
     return { state: { kind: 'calibrating' }, restingHR, averageSleepingHR, lastSpO2 };
   }
 
   const checks = [
-    isInRange(lastNight.restingHR, baseline.restingHRMean, baseline.restingHRSd),
-    isInRange(lastNight.averageSleepingHR, baseline.sleepingHRMean, baseline.sleepingHRSd),
+    isWithinRange(lastNight.restingHR, ranges.restingHR),
+    isWithinRange(lastNight.averageSleepingHR, ranges.sleepingHR),
   ];
   const count = checks.filter((inRange) => !inRange).length;
   return {

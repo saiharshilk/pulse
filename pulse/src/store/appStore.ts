@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { getAllHeartRates } from '@/data/db/heartRatesRepository';
 import { getLastSyncTs } from '@/data/db/metaRepository';
 import { loadOrCreateProfile } from '@/data/db/profileRepository';
-import { getAllSpO2Checks } from '@/data/db/spo2ChecksRepository';
+import { getAllSpO2Checks, insertSpO2Check } from '@/data/db/spo2ChecksRepository';
 import { getAllSteps } from '@/data/db/stepsRepository';
 import { connectToRing, getConnectionState, getDeviceInfo, onConnectionStateChange } from '@/data/deviceManager';
 import * as syncService from '@/data/syncService';
@@ -11,6 +11,7 @@ import { computeSummaries } from '@/scoring/scoringEngine';
 import type { DailySummary } from '@/types/computed';
 import { DEFAULT_PROFILE, type UserProfile } from '@/types/profile';
 import type { ConnectionState, DeviceInfo } from '@/types/provider';
+import type { SpO2SpotCheck } from '@/types/raw';
 
 export type InitStatus = 'loading' | 'ready' | 'error';
 
@@ -18,6 +19,7 @@ type AppState = {
   initStatus: InitStatus;
   initError: string | null;
   summaries: DailySummary[]; // oldest → newest
+  spo2Checks: SpO2SpotCheck[]; // oldest → newest
   selectedDayKey: string | null;
   connection: ConnectionState;
   deviceInfo: DeviceInfo | null;
@@ -26,6 +28,7 @@ type AppState = {
   profile: UserProfile;
   init: () => Promise<void>;
   sync: () => Promise<void>;
+  saveSpO2Check: (check: SpO2SpotCheck) => Promise<void>;
   selectDay: (dayKey: string) => void;
   goPrevDay: () => void;
   goNextDay: () => void;
@@ -61,6 +64,7 @@ export const useAppStore = create<AppState>()((set, get) => {
     const stillExists = summaries.some((summary) => summary.dayKey === selected);
     set({
       summaries,
+      spo2Checks,
       selectedDayKey: stillExists ? selected : newest === undefined ? null : newest.dayKey,
     });
   }
@@ -76,6 +80,7 @@ export const useAppStore = create<AppState>()((set, get) => {
     initStatus: 'loading',
     initError: null,
     summaries: [],
+    spo2Checks: [],
     selectedDayKey: null,
     connection: { status: 'disconnected' },
     deviceInfo: null,
@@ -112,6 +117,12 @@ export const useAppStore = create<AppState>()((set, get) => {
       } finally {
         set({ isSyncing: false });
       }
+    },
+
+    // Saves a finished spot check, then refreshes the scores so Health Monitor shows it.
+    saveSpO2Check: async (check) => {
+      await insertSpO2Check(check);
+      await recomputeSummaries();
     },
 
     selectDay: (dayKey) => set({ selectedDayKey: dayKey }),

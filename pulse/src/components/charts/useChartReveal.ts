@@ -4,12 +4,17 @@ import { Easing, useSharedValue, withTiming, type SharedValue } from 'react-nati
 import { layout } from '@/theme/layout';
 
 // Goes from 0 to 1 when a chart first appears, and again whenever `revealKey` changes.
-export function useChartReveal(revealKey: unknown): SharedValue<number> {
-  const progress = useSharedValue(0);
+// With `enabled` false it stays at 1, for charts that update every second.
+export function useChartReveal(revealKey: unknown, enabled = true): SharedValue<number> {
+  const progress = useSharedValue(enabled ? 0 : 1);
   useEffect(() => {
+    if (!enabled) {
+      progress.set(1);
+      return;
+    }
     progress.set(0);
     progress.set(withTiming(1, { duration: layout.chartRevealMs, easing: Easing.out(Easing.cubic) }));
-  }, [progress, revealKey]);
+  }, [progress, revealKey, enabled]);
   return progress;
 }
 

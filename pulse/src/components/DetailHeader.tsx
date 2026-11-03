@@ -7,19 +7,22 @@ import { typography } from '@/theme/typography';
 
 import { PressableOpacity } from './PressableOpacity';
 
-type DetailHeaderProps = { title: string; onBack: () => void; onInfo?: () => void };
+type DetailHeaderProps = { title: string; subtitle?: string; onBack: () => void; onInfo?: () => void };
 
 const SIDE_WIDTH = 44;
 
-export function DetailHeader({ title, onBack, onInfo }: DetailHeaderProps) {
+export function DetailHeader({ title, subtitle, onBack, onInfo }: DetailHeaderProps) {
   return (
     <View style={styles.row}>
       <PressableOpacity onPress={onBack} style={styles.side} accessibilityLabel="Go back">
         <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
       </PressableOpacity>
-      <Text style={[typography.labelCaps, styles.title]} numberOfLines={1}>
-        {title}
-      </Text>
+      <View style={styles.titles}>
+        <Text style={[typography.labelCaps, styles.title]} numberOfLines={1}>
+          {title}
+        </Text>
+        {subtitle !== undefined && <Text style={[typography.caption, styles.title]}>{subtitle}</Text>}
+      </View>
       {onInfo === undefined ? (
         <View style={styles.side} />
       ) : (
@@ -40,5 +43,6 @@ const styles = StyleSheet.create({
   },
   side: { width: SIDE_WIDTH, height: SIDE_WIDTH, justifyContent: 'center' },
   info: { alignItems: 'flex-end' },
-  title: { flex: 1, textAlign: 'center' },
+  titles: { flex: 1 },
+  title: { textAlign: 'center' },
 });

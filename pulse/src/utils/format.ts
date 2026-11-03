@@ -1,5 +1,5 @@
 // Turns numbers and timestamps into the exact strings screens display.
-import { format } from 'date-fns';
+import { differenceInCalendarDays, format } from 'date-fns';
 
 import { addDaysTs, dayKeyOf, MS_PER_MINUTE } from './time';
 
@@ -67,4 +67,17 @@ export function formatPercent(value: number | null): string {
 // → "52 bpm", or "—" when there's no value
 export function formatBpm(value: number | null): string {
   return value === null ? NO_VALUE : `${Math.round(value)} bpm`;
+}
+
+// → "today", "yesterday" or "3 days ago", by calendar day
+export function formatDaysAgo(ts: number, now: number): string {
+  const days = differenceInCalendarDays(now, ts);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  return `${days} days ago`;
+}
+
+// → "MON, OCT 26 · 9:41 AM"
+export function formatDayAndTime(ts: number): string {
+  return `${format(ts, 'EEE, MMM d').toUpperCase()} · ${formatClockTime(ts)}`;
 }

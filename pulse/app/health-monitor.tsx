@@ -1,5 +1,3 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { HealthMonitorScreen } from '@/features/healthMonitor/HealthMonitorScreen';
 
-export default function HealthMonitorRoute() {
-  return <PlaceholderScreen title="Health Monitor" promptNumber={3} showBack />;
-}
+export default HealthMonitorScreen;

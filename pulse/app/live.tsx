@@ -1,5 +1,3 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { LiveScreen } from '@/features/live/LiveScreen';
 
-export default function LiveRoute() {
-  return <PlaceholderScreen title="Live" promptNumber={3} showBack />;
-}
+export default LiveScreen;

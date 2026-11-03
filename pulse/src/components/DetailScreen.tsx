@@ -14,28 +14,31 @@ export type DetailScrollRef = ComponentRef<typeof ScrollView>;
 
 type DetailScreenProps = {
   title: string; // the selected day's label
-  infoTitle: string;
-  info: InfoSection[];
+  subtitle?: string;
+  infoTitle?: string;
+  info?: InfoSection[]; // leave out to hide the info button
   scrollRef?: RefObject<DetailScrollRef | null>;
   children: ReactNode;
 };
 
 // The shared frame for Sleep, Recovery and Strain: header, scrolling content and info sheet.
-export function DetailScreen({ title, infoTitle, info, scrollRef, children }: DetailScreenProps) {
+export function DetailScreen({ title, subtitle, infoTitle, info, scrollRef, children }: DetailScreenProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   return (
     <ScreenBackground>
-      <DetailHeader title={title} onBack={() => router.back()} onInfo={() => setIsInfoOpen(true)} />
+      <DetailHeader title={title} subtitle={subtitle} onBack={() => router.back()} onInfo={info === undefined ? undefined : () => setIsInfoOpen(true)} />
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + spacing.xxxl }]}>
         {children}
       </ScrollView>
-      <InfoSheet visible={isInfoOpen} title={infoTitle} sections={info} onClose={() => setIsInfoOpen(false)} />
+      {info !== undefined && (
+        <InfoSheet visible={isInfoOpen} title={infoTitle ?? ''} sections={info} onClose={() => setIsInfoOpen(false)} />
+      )}
     </ScreenBackground>
   );
 }
