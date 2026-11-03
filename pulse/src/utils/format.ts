@@ -48,3 +48,23 @@ export function formatTimeAgo(ts: number, now: number): string {
   if (minutes < 60) return `${minutes} min ago`;
   return `${Math.floor(minutes / 60)} hr ago`;
 }
+
+// → "M" (a weekday's first letter, for chart labels)
+export function formatWeekdayLetter(ts: number): string {
+  return format(ts, 'EEEEE');
+}
+
+// → "OCT 3"
+export function formatShortDate(ts: number): string {
+  return format(ts, 'MMM d').toUpperCase();
+}
+
+// → "88%", or "—" when there's no value
+export function formatPercent(value: number | null): string {
+  return value === null ? NO_VALUE : `${Math.round(value)}%`;
+}
+
+// → "52 bpm", or "—" when there's no value
+export function formatBpm(value: number | null): string {
+  return value === null ? NO_VALUE : `${Math.round(value)} bpm`;
+}

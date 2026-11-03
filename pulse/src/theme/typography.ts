@@ -28,6 +28,11 @@ export const typography = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     color: colors.textPrimary,
   },
+  bigDialSuffix: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
   screenTitle: {
     fontSize: 32,
     fontWeight: '600',

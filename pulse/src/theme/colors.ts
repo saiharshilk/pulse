@@ -24,4 +24,10 @@ export const colors = {
   liveButton: '#1E252C',
   liveGlow: 'rgba(255,0,38,0.35)',
   liveIcon: '#FF4D67',
+  // Charts and sheets
+  chartBand: 'rgba(255,255,255,0.07)',
+  strainTranslucent: 'rgba(0,147,231,0.22)',
+  // Zone 1 → Zone 5, each a little brighter than the last.
+  strainZones: ['#0A4F7A', '#0B6AA3', '#0093E7', '#3DB0F0', '#7FCBF6'],
+  sheetBackdrop: 'rgba(0,0,0,0.6)',
 } as const;

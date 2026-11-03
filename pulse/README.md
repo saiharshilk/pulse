@@ -59,7 +59,8 @@ To start over with fresh data, delete Expo Go's data for the app or reinstall Ex
 app/                 Expo Router routes (thin files)
 src/config/          appConfig: app name, mock seed, data source
 src/theme/           colors, typography, spacing, layout
-src/components/      shared UI: ScoreDial, Card, FloatingTabBar, charts/Sparkline, ...
+src/components/      shared UI: ScoreDial, Card, FloatingTabBar, DetailScreen, InfoSheet, ...
+src/components/charts/  Sparkline, LineChart, BarChart, SleepTimeline, HorizontalBars, GaugeBar, chartMath
 src/types/           raw, provider, computed, profile
 src/data/providers/  RingDataProvider, MockRingProvider, ColmiRingProvider
 src/data/mock/       seeded random, day plans, generator (mockTruth is test-only)
@@ -67,7 +68,8 @@ src/data/db/         SQLite setup and repositories
 src/data/            syncService, syncFilters, deviceManager
 src/scoring/         sleep, recovery, strain, activities, calories, health monitor, engine
 src/store/           zustand app store
-src/features/        one folder per screen (home, appInit, ...)
+src/features/        one folder per screen (home, sleep, recovery, strain, appInit) plus shared hooks
+src/insights/        rule-based insight sentences
 src/utils/           format, time, series, haptics
 __tests__/           Jest tests for pure logic
 ```
@@ -75,12 +77,19 @@ __tests__/           Jest tests for pure logic
 ## Status
 
 **Prompt 1 (done):** foundation, full scoring engine, design system, tab shell, and the Home screen on
-mock data. Health, Device, Live, Sleep, Recovery, Strain and Health Monitor are placeholders for now.
+mock data. Health, Device, Live and Health Monitor are still placeholders.
 
 **Calibration fixes:**
 - Strain counts everyday movement: a light zone (hrr 0.30–0.50, weight 0.5, reported as `lightMinutes`) and a load divisor of 200. Mock days now include on-feet time so desk, walking, workout and hard days land in distinct ranges.
 - Bedtime and wake time use the 5-minute heart-rate samples, so they land on realistic minutes instead of 15-minute boundaries. Awake intervals inside the night still use 15-minute epochs.
 - Tests always run in America/Chicago (`jest.globalSetup.js`), including checks on the 23-hour and 25-hour daylight-saving days.
+
+**Prompt 2 (done):** Sleep, Recovery and Strain detail screens, opened from the Home dials for the selected day.
+- Chart kit in `src/components/charts/`, drawn with react-native-svg only. The math (scaling, nice axis ranges, gaps) lives in `chartMath.ts` and is tested.
+- `src/insights/insightGenerator.ts` turns scores into one or two plain sentences using fixed rules, and `src/scoring/strainTarget.ts` suggests a strain range from recovery.
+- `useDaySamples(dayKey)` loads a day's raw heart rate and steps for the charts and caches them per day and per sync.
+- Each screen's info button opens a sheet explaining how PULSE estimates its metrics from the ring's heart rate and steps.
+- Web: `metro.config.js` lets expo-sqlite load on web. Web is only for checking layouts; the app targets iPhone.
 
 PULSE's scores are simple, explainable approximations, and every number is in
 `src/scoring/scoringConstants.ts`.

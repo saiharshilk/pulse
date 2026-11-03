@@ -1,5 +1,3 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { StrainScreen } from '@/features/strain/StrainScreen';
 
-export default function StrainRoute() {
-  return <PlaceholderScreen title="Strain" promptNumber={2} showBack />;
-}
+export default StrainScreen;

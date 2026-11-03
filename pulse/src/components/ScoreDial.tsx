@@ -24,6 +24,8 @@ type ScoreDialProps = {
   valueText?: string; // the text in the center; defaults to the value itself
   suffix?: string;
   placeholder?: boolean; // shows "—" with an empty arc
+  large?: boolean; // detail screens use the bigger value text
+  topLabel?: string; // small text inside the dial, above the value
   onPress?: () => void;
 };
 
@@ -36,6 +38,8 @@ export function ScoreDial({
   valueText,
   suffix,
   placeholder = false,
+  large = false,
+  topLabel,
   onPress,
 }: ScoreDialProps) {
   const strokeWidth = size * layout.dialStrokeRatio;
@@ -46,8 +50,10 @@ export function ScoreDial({
 
   // TODO(spec): the spec's 44pt value doesn't fit "12.4" in a Home dial of about 107pt, so text
   // scales with the dial and stops at the spec size on larger dials.
-  const valueFontSize = Math.min(typography.dialValue.fontSize, size * layout.dialValueSizeRatio);
-  const suffixFontSize = Math.min(typography.dialSuffix.fontSize, size * layout.dialSuffixSizeRatio);
+  const valueStyle = large ? typography.bigDialValue : typography.dialValue;
+  const suffixStyle = large ? typography.bigDialSuffix : typography.dialSuffix;
+  const valueFontSize = Math.min(valueStyle.fontSize, size * layout.dialValueSizeRatio);
+  const suffixFontSize = Math.min(suffixStyle.fontSize, size * layout.dialSuffixSizeRatio);
 
   const progress = useSharedValue(0);
 
@@ -88,9 +94,14 @@ export function ScoreDial({
           />
         </Svg>
         <View style={[styles.center, { paddingHorizontal: strokeWidth }]}>
-          <Text style={[typography.dialValue, { fontSize: valueFontSize }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
+          {topLabel !== undefined && (
+            <Text style={[typography.wordmark, styles.topLabel, { fontSize: size * layout.bigDialTopLabelRatio }]}>
+              {topLabel}
+            </Text>
+          )}
+          <Text style={[valueStyle, { fontSize: valueFontSize }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
             {placeholder ? NO_VALUE : (valueText ?? String(value))}
-            {!placeholder && suffix !== undefined && <Text style={[typography.dialSuffix, { fontSize: suffixFontSize }]}>{suffix}</Text>}
+            {!placeholder && suffix !== undefined && <Text style={[suffixStyle, { fontSize: suffixFontSize }]}>{suffix}</Text>}
           </Text>
         </View>
       </View>
@@ -109,4 +120,5 @@ const styles = StyleSheet.create({
   center: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: spacing.md },
   label: { flexShrink: 1 },
+  topLabel: { letterSpacing: 3 },
 });

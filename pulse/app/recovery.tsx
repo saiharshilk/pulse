@@ -1,5 +1,3 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { RecoveryScreen } from '@/features/recovery/RecoveryScreen';
 
-export default function RecoveryRoute() {
-  return <PlaceholderScreen title="Recovery" promptNumber={2} showBack />;
-}
+export default RecoveryScreen;
