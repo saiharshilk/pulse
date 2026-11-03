@@ -26,8 +26,10 @@ export function loadOfMinutes(minutes: (number | null)[], restingHR: number, max
   let load = 0;
   for (const bpm of minutes) {
     if (bpm === null) continue;
-    const zone = zoneIndex(heartRateReserve(bpm, restingHR, maxHR));
+    const hrr = heartRateReserve(bpm, restingHR, maxHR);
+    const zone = zoneIndex(hrr);
     if (zone >= 0) load += HEART_RATE.zoneWeights[zone];
+    else if (hrr >= HEART_RATE.lightZone.floor) load += HEART_RATE.lightZone.weight;
   }
   return load;
 }
@@ -35,10 +37,13 @@ export function loadOfMinutes(minutes: (number | null)[], restingHR: number, max
 export function calculateStrain({ heartRates, window, restingHR, maxHR, calories }: StrainInput): StrainMetrics {
   const minutes = toMinuteSeries(heartRates, window.start, window.end);
   const zoneMinutes = HEART_RATE.zoneFloors.map(() => 0);
+  let lightMinutes = 0;
   for (const bpm of minutes) {
     if (bpm === null) continue;
-    const zone = zoneIndex(heartRateReserve(bpm, restingHR, maxHR));
+    const hrr = heartRateReserve(bpm, restingHR, maxHR);
+    const zone = zoneIndex(hrr);
     if (zone >= 0) zoneMinutes[zone] += 1;
+    else if (hrr >= HEART_RATE.lightZone.floor) lightMinutes += 1;
   }
 
   const bpms = heartRates.filter((s) => s.bpm !== 0).map((s) => s.bpm);
@@ -47,6 +52,7 @@ export function calculateStrain({ heartRates, window, restingHR, maxHR, calories
     averageHR: bpms.length === 0 ? 0 : Math.round(bpms.reduce((a, b) => a + b, 0) / bpms.length),
     maxHR: bpms.length === 0 ? 0 : Math.max(...bpms),
     zoneMinutes,
+    lightMinutes,
     calories,
     window,
   };

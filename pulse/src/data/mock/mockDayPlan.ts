@@ -15,10 +15,14 @@ export type NightPlan = {
   isShort: boolean;
 };
 
-export type Workout = TimeSpan & { targetBpm: number };
+export type Workout = TimeSpan & { targetBpm: number; isHard: boolean };
+
+export type DayKind = 'desk' | 'walking' | 'workout' | 'hard';
 
 export type DaytimePlan = {
+  kind: DayKind;
   walks: TimeSpan[];
+  onFeet: TimeSpan[]; // chores and errands: walking-level heart rate, few steps
   workout: Workout | null;
   chargingGap: TimeSpan | null;
 };
@@ -82,7 +86,10 @@ export function planNight(seed: number, dayStart: number): NightPlan {
 
 function planWorkout(random: SeededRandom, dayStart: number, wakeTime: number): Workout | null {
   if (!random.chance(MOCK_ACTIVITY.workoutDayChance)) return null;
-  const minutes = random.int(MOCK_ACTIVITY.workoutMinutes.min, MOCK_ACTIVITY.workoutMinutes.max);
+  const isHard = random.chance(MOCK_ACTIVITY.hardWorkoutChance);
+  const length = isHard ? MOCK_ACTIVITY.hardWorkoutMinutes : MOCK_ACTIVITY.workoutMinutes;
+  const target = isHard ? MOCK_ACTIVITY.hardWorkoutTargetBpm : MOCK_ACTIVITY.workoutTargetBpm;
+  const minutes = random.int(length.min, length.max);
   const start = random.chance(MOCK_ACTIVITY.morningWorkoutChance)
     ? wakeTime +
       random.range(
@@ -97,7 +104,8 @@ function planWorkout(random: SeededRandom, dayStart: number, wakeTime: number): 
   return {
     start,
     end: start + minutes * MS_PER_MINUTE,
-    targetBpm: random.range(MOCK_ACTIVITY.workoutTargetBpm.min, MOCK_ACTIVITY.workoutTargetBpm.max),
+    targetBpm: random.range(target.min, target.max),
+    isHard,
   };
 }
 
@@ -109,18 +117,45 @@ export function planDaytime(seed: number, dayStart: number): DaytimePlan {
 
   const workout = planWorkout(random, dayStart, wakeTime);
 
-  // Share the waking hours out into equal slots and drop one walk into each.
-  const walkCount = random.int(MOCK_ACTIVITY.walksPerDay.min, MOCK_ACTIVITY.walksPerDay.max);
-  const earliest = wakeTime + MOCK_ACTIVITY.walkEarliestAfterWakeMinutes * MS_PER_MINUTE;
-  const latest = nextBedtime - MOCK_ACTIVITY.walkLatestBeforeBedMinutes * MS_PER_MINUTE;
-  const slotMs = (latest - earliest) / walkCount;
-  const walks: TimeSpan[] = [];
+  let kind: DayKind = random.chance(MOCK_ACTIVITY.walkingDayChance) ? 'walking' : 'desk';
+  if (workout !== null) kind = workout.isHard ? 'hard' : 'workout';
+
+  const walkRange = kind === 'walking' ? MOCK_ACTIVITY.walksPerWalkingDay : MOCK_ACTIVITY.walksPerDay;
+  const walkCount = random.int(walkRange.min, walkRange.max);
+  const activeRange = MOCK_ACTIVITY.activeMinutes[kind === 'hard' ? 'workout' : kind];
+  let minutesLeft = random.range(activeRange.min, activeRange.max);
+
+  // Walks come first; whatever active time is left becomes shorter on-feet blocks.
+  const blocks: { minutes: number; isWalk: boolean }[] = [];
   for (let i = 0; i < walkCount; i++) {
     const minutes = random.range(MOCK_ACTIVITY.walkMinutes.min, MOCK_ACTIVITY.walkMinutes.max);
-    const length = minutes * MS_PER_MINUTE;
-    const start = earliest + slotMs * i + random.range(0, Math.max(0, slotMs - length));
-    walks.push({ start, end: start + length });
+    blocks.push({ minutes, isWalk: true });
+    minutesLeft -= minutes;
   }
+  while (minutesLeft > 0) {
+    const minutes = Math.min(
+      minutesLeft + MOCK_ACTIVITY.onFeetBlockMinutes.min,
+      random.range(MOCK_ACTIVITY.onFeetBlockMinutes.min, MOCK_ACTIVITY.onFeetBlockMinutes.max),
+    );
+    blocks.push({ minutes, isWalk: false });
+    minutesLeft -= minutes;
+  }
+
+  // Share the waking hours out into equal slots and drop one block into each, in a shuffled order.
+  for (let i = blocks.length - 1; i > 0; i--) {
+    const swap = random.int(0, i);
+    [blocks[i], blocks[swap]] = [blocks[swap], blocks[i]];
+  }
+  const earliest = wakeTime + MOCK_ACTIVITY.walkEarliestAfterWakeMinutes * MS_PER_MINUTE;
+  const latest = nextBedtime - MOCK_ACTIVITY.walkLatestBeforeBedMinutes * MS_PER_MINUTE;
+  const slotMs = (latest - earliest) / blocks.length;
+  const walks: TimeSpan[] = [];
+  const onFeet: TimeSpan[] = [];
+  blocks.forEach((block, i) => {
+    const length = block.minutes * MS_PER_MINUTE;
+    const start = earliest + slotMs * i + random.range(0, Math.max(0, slotMs - length));
+    (block.isWalk ? walks : onFeet).push({ start, end: start + length });
+  });
 
   let chargingGap: TimeSpan | null = null;
   if (random.chance(MOCK_HISTORY.chargingDayChance)) {
@@ -132,7 +167,7 @@ export function planDaytime(seed: number, dayStart: number): DaytimePlan {
     chargingGap = { start, end: start + minutes * MS_PER_MINUTE };
   }
 
-  return { walks, workout, chargingGap };
+  return { kind, walks, onFeet, workout, chargingGap };
 }
 
 // How much the night ending on `dayStart` shifts sleeping heart rate, in bpm.

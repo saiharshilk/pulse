@@ -1,6 +1,6 @@
 import type { UserProfile } from '@/types/profile';
 import type { StepSample } from '@/types/raw';
-import { MS_PER_DAY } from '@/utils/time';
+import { addDaysTs } from '@/utils/time';
 
 import { CALORIES } from './scoringConstants';
 
@@ -21,7 +21,9 @@ export function calculateCalories(
   dayStart: number,
   now: number,
 ): number {
-  const elapsed = Math.min(1, Math.max(0, (now - dayStart) / MS_PER_DAY));
+  // Daylight-saving days last 23 or 25 hours, so measure this day's real length.
+  const dayLength = addDaysTs(dayStart, 1) - dayStart;
+  const elapsed = Math.min(1, Math.max(0, (now - dayStart) / dayLength));
   const stepCalories = steps.reduce((total, bucket) => total + bucket.calories, 0); // TODO(ring): verify units.
   return Math.round(basalMetabolicRate(profile) * elapsed + stepCalories);
 }

@@ -69,7 +69,7 @@ function heartRateAt(ts: number, day: DayContext, random: SeededRandom): number 
   if (daytime.workout !== null && contains(ts, daytime.workout)) {
     return workoutBpm(ts, daytime.workout, random);
   }
-  if (daytime.walks.some((walk) => contains(ts, walk))) {
+  if ([...daytime.walks, ...daytime.onFeet].some((block) => contains(ts, block))) {
     return random.range(MOCK_HEART_RATE.walk.min, MOCK_HEART_RATE.walk.max);
   }
   // Resting: a slow swing over the day plus a little noise.
@@ -103,6 +103,10 @@ function stepsInBucket(start: number, end: number, day: DayContext, random: Seed
   for (const walk of daytime.walks) {
     const perMinute = random.range(MOCK_ACTIVITY.walkStepsPerMinute.min, MOCK_ACTIVITY.walkStepsPerMinute.max);
     steps += overlapMinutes(start, end, walk) * perMinute;
+  }
+  for (const block of daytime.onFeet) {
+    const perMinute = random.range(MOCK_ACTIVITY.onFeetStepsPerMinute.min, MOCK_ACTIVITY.onFeetStepsPerMinute.max);
+    steps += overlapMinutes(start, end, block) * perMinute;
   }
   if (daytime.workout !== null) {
     const perMinute = random.range(MOCK_ACTIVITY.workoutStepsPerMinute.min, MOCK_ACTIVITY.workoutStepsPerMinute.max);

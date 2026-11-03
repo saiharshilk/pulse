@@ -38,7 +38,9 @@ export function HomeSummaryCards({ healthStatus, stepsValue, stepsProgress, step
           <View style={styles.track}>
             <View style={[styles.progress, { width: `${stepsProgress * 100}%` }]} />
           </View>
-          <Text style={typography.caption}>{stepsCaption}</Text>
+          <Text style={styles.stepsCaption} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+            {stepsCaption}
+          </Text>
         </Card>
       </PressableOpacity>
     </View>
@@ -53,6 +55,7 @@ const styles = StyleSheet.create({
   status: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   statusText: { flexShrink: 1 },
   steps: { ...typography.metricValue, fontSize: 28, fontWeight: '700' },
+  stepsCaption: { ...typography.caption, fontSize: 12 },
   track: {
     height: layout.progressBarHeight,
     borderRadius: layout.progressBarHeight / 2,

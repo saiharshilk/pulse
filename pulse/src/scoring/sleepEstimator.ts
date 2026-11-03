@@ -4,6 +4,7 @@ import type { HeartRateSample, StepSample } from '@/types/raw';
 import { clockDiffMinutes, MS_PER_HOUR, MS_PER_MINUTE, minuteOfDay } from '@/utils/time';
 
 import { EPOCH_MINUTES, SLEEP } from './scoringConstants';
+import { refineBedtime, refineWakeTime } from './sleepEdges';
 
 const EPOCH_MS = EPOCH_MINUTES * MS_PER_MINUTE;
 
@@ -57,11 +58,14 @@ function percentile(values: number[], fraction: number): number {
   return sorted[Math.floor((sorted.length - 1) * fraction)];
 }
 
-function findAsleepLikeEpochs(epochs: Epoch[]): boolean[] {
+// The highest heart rate that still looks asleep tonight, or null with no readings.
+function asleepThreshold(epochs: Epoch[]): number | null {
   const known = epochs.flatMap((epoch) => (epoch.hr === null ? [] : [epoch.hr]));
-  if (known.length === 0) return epochs.map(() => false);
-  const threshold = percentile(known, SLEEP.nightLowPercentile) + SLEEP.asleepHrMargin;
+  if (known.length === 0) return null;
+  return percentile(known, SLEEP.nightLowPercentile) + SLEEP.asleepHrMargin;
+}
 
+function findAsleepLikeEpochs(epochs: Epoch[], threshold: number): boolean[] {
   const looksAsleep = epochs.map((e) => e.hr !== null && e.steps === 0 && e.hr <= threshold);
   // Missing heart rate counts as asleep only when both neighbors look asleep.
   return epochs.map((epoch, i) => {
@@ -103,20 +107,25 @@ function lowestRollingAverage(values: number[], windowSize: number): number {
   return lowest / windowSize;
 }
 
-// Steps 1–6 of the estimate. Returns null when no sleep of at least 3 hours is found.
+// Steps 1–6 of the estimate, with both edges refined past the 15-minute epochs. Returns null when no sleep of at least 3 hours is found.
 export function detectSleepSession(input: SleepSessionInput): SleepSession | null {
-  const run = findLongestRun(findAsleepLikeEpochs(buildEpochs(input)));
+  const epochs = buildEpochs(input);
+  const threshold = asleepThreshold(epochs);
+  if (threshold === null) return null;
+  const run = findLongestRun(findAsleepLikeEpochs(epochs, threshold));
   if (run === null) return null;
 
   const { windowStart } = input;
-  const bedtime = windowStart + run.first * EPOCH_MS;
-  const wakeTime = windowStart + (run.last + 1) * EPOCH_MS;
-  const timeInBedMs = wakeTime - bedtime;
-  if (timeInBedMs < SLEEP.minSessionHours * MS_PER_HOUR) return null;
+  const roughBedtime = windowStart + run.first * EPOCH_MS;
+  const roughWakeTime = windowStart + (run.last + 1) * EPOCH_MS;
+  if (roughWakeTime - roughBedtime < SLEEP.minSessionHours * MS_PER_HOUR) return null;
 
-  const bpms = input.heartRates
-    .filter((sample) => sample.ts >= bedtime && sample.ts < wakeTime && sample.bpm !== 0)
-    .map((sample) => sample.bpm);
+  const known = input.heartRates.filter((sample) => sample.bpm !== 0);
+  const bedtime = refineBedtime(known, input.steps, roughBedtime, threshold);
+  const wakeTime = refineWakeTime(known, input.steps, roughWakeTime, threshold);
+  const timeInBedMs = wakeTime - bedtime;
+
+  const bpms = known.filter((sample) => sample.ts >= bedtime && sample.ts < wakeTime).map((sample) => sample.bpm);
   if (bpms.length === 0) return null;
 
   const awakeIntervals = run.gaps.map((gap) => ({
