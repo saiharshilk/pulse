@@ -7,7 +7,7 @@ import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 import { MS_PER_MINUTE } from '@/utils/time';
 
-import { niceDomain, scaleLinear, splitAtGaps, toPolylinePoints, type ChartPoint } from './chartMath';
+import { paddedDomain, scaleLinear, splitAtGaps, toPolylinePoints, type ChartPoint } from './chartMath';
 import { svgId, useChartReveal } from './useChartReveal';
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
@@ -36,6 +36,7 @@ type LineChartProps = {
   maxGapMs?: number; // longer gaps break the line
   variant?: 'line' | 'dots'; // dots suit sparse readings like SpO2 spot checks
   animateReveal?: boolean; // false for live charts that update every second
+  minYSpan?: number; // keeps a nearly flat series from looking dramatic, e.g. 20 bpm
 };
 
 export function LineChart({
@@ -52,6 +53,7 @@ export function LineChart({
   maxGapMs = DEFAULT_MAX_GAP_MS,
   variant = 'line',
   animateReveal = true,
+  minYSpan = 0,
 }: LineChartProps) {
   const [width, setWidth] = useState(0);
   const clipId = svgId('line-clip', useId());
@@ -66,7 +68,7 @@ export function LineChart({
   const yValues = data.map((point) => point.y);
   if (band !== undefined) yValues.push(band.low, band.high);
   if (referenceLine !== undefined) yValues.push(referenceLine);
-  const y = niceDomain(Math.min(...yValues), Math.max(...yValues), 3);
+  const y = paddedDomain(Math.min(...yValues), Math.max(...yValues), { minSpan: minYSpan });
 
   const toX = (value: number) => PAD_LEFT + scaleLinear(value, [x0, x1], [0, plotWidth]);
   const toY = (value: number) => scaleLinear(value, [y.min, y.max], [height - PAD_BOTTOM, PAD_TOP]);

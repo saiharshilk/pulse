@@ -10,12 +10,12 @@ export const SLEEP = {
   maxGapEpochs: 2,
   minSessionHours: 3,
   restingWindowSamples: 6,
-  strainThreshold: 10,
+  strainThreshold: 12, // only strain above a normal day's adds sleep need
   strainMinutesPerPoint: 3,
-  strainCapMinutes: 45,
-  debtFraction: 0.25,
+  strainCapMinutes: 30,
+  debtFraction: 0.15, // share of recent shortfalls added back as debt
   debtLookbackNights: 3,
-  debtCapMinutes: 90,
+  debtCapMinutes: 60,
   consistencyNights: 4,
   edgeMaxSteps: 120, // a bucket with more steps than this can't contain falling asleep or still sleeping
 } as const;

@@ -1,5 +1,5 @@
 // Turns each hidden day plan into what the ring would actually log: heart rate and steps only.
-import { MOCK_ACTIVITY, MOCK_HEART_RATE, MOCK_HISTORY } from '@/data/mock/mockConstants';
+import { MOCK_ACTIVITY, MOCK_HEART_RATE, MOCK_HISTORY, MOCK_STEPS } from '@/data/mock/mockConstants';
 import type { HeartRateReading, RingSyncBatch, StepReading } from '@/types/provider';
 import { addDaysTs, dayKeyOf, MS_PER_MINUTE, startOfDayTs } from '@/utils/time';
 
@@ -7,6 +7,7 @@ import {
   nightHeartRateOffset,
   planDaytime,
   planNight,
+  type DayKind,
   type DaytimePlan,
   type NightPlan,
   type TimeSpan,
@@ -130,6 +131,20 @@ function buildDayContext(seed: number, dayStart: number): DayContext {
   };
 }
 
+// How many steps a day should have. Most days fall in a range that suits the kind of day;
+// a few desk days are lazy and a few active days are big.
+function dailyStepTarget(seed: number, dayStart: number, kind: DayKind): number {
+  const random = createSeededRandom(deriveSeed(seed, `steps:${dayKeyOf(dayStart)}`));
+  if (kind === 'desk' && random.chance(MOCK_STEPS.lazyDayChance)) {
+    return random.range(MOCK_STEPS.lazyDay.min, MOCK_STEPS.lazyDay.max);
+  }
+  if (kind !== 'desk' && random.chance(MOCK_STEPS.bigDayChance)) {
+    return random.range(MOCK_STEPS.bigDay.min, MOCK_STEPS.bigDay.max);
+  }
+  const range = MOCK_STEPS.dailyTarget[kind];
+  return random.range(range.min, range.max);
+}
+
 // Readings for one whole calendar day. Cutting off at "now" happens afterwards,
 // so the morning of a day looks the same however late in the day you ask.
 function generateDay(seed: number, dayStart: number): RingSyncBatch {
@@ -152,10 +167,10 @@ function generateDay(seed: number, dayStart: number): RingSyncBatch {
     total += steps;
   }
 
-  // Busy days are scaled down so the daily total stays realistic.
-  const scale = total > MOCK_HISTORY.maxDailySteps ? MOCK_HISTORY.maxDailySteps / total : 1;
+  // Scale the day's buckets so their total lands on that day's target.
+  const scale = total > 0 ? dailyStepTarget(seed, dayStart, day.daytime.kind) / total : 0;
   const steps: StepReading[] = rawSteps.map((bucket) => {
-    const count = Math.floor(bucket.steps * scale); // floor, so the total can't round past the cap
+    const count = Math.round(bucket.steps * scale);
     return {
       start: bucket.start,
       steps: count,

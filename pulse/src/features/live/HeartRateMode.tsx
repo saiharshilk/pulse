@@ -8,6 +8,7 @@ import { layout } from '@/theme/layout';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 
+import { LIVE } from './liveMath';
 import { PulsingHeart } from './PulsingHeart';
 import type { useLiveViewModel } from './useLiveViewModel';
 
@@ -32,6 +33,7 @@ export function HeartRateMode({ view }: HeartRateModeProps) {
           startLabel="60 s ago"
           endLabel="now"
           animateReveal={false}
+          minYSpan={LIVE.chartMinSpanBpm}
         />
       </View>
 

@@ -6,7 +6,7 @@ import Svg, { ClipPath, Defs, G, Line, Rect } from 'react-native-svg';
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
 
-import { scaleLinear } from './chartMath';
+import { boxesOverlap, scaleLinear, type Box } from './chartMath';
 import { svgId, useChartReveal } from './useChartReveal';
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
@@ -16,6 +16,9 @@ const LABEL_HEIGHT = 20;
 const BAR_WIDTH_RATIO = 0.56;
 const HEADROOM = 1.1; // keeps the tallest bar's label off the top edge
 const TEXT_HEIGHT = 14;
+const PILL_PADDING = 6;
+const PILL_GAP = 3; // space between the reference line and its label
+const ESTIMATED_CHAR_WIDTH = 6; // until the label has been measured
 
 export type BarDatum = { label: string; value: number; color: string; valueLabel: string };
 
@@ -39,6 +42,7 @@ export function BarChart({
   endLabel,
 }: BarChartProps) {
   const [width, setWidth] = useState(0);
+  const [targetLabelWidth, setTargetLabelWidth] = useState<number | null>(null);
   const clipId = svgId('bar-clip', useId());
   const reveal = useChartReveal(bars.map((bar) => bar.value).join(','));
 
@@ -51,6 +55,24 @@ export function BarChart({
   const barWidth = Math.max(1, slot * BAR_WIDTH_RATIO);
   // One clip rectangle grows up from the baseline, revealing every bar at once.
   // It's far cheaper than animating each bar, which matters with 90 bars on screen.
+
+  // The reference label sits at the left end of its line, just above it.
+  const targetLabelBox: Box | null =
+    target === undefined
+      ? null
+      : {
+          x: 0,
+          y: toY(target.value) - TEXT_HEIGHT - PILL_GAP,
+          width: targetLabelWidth ?? target.label.length * ESTIMATED_CHAR_WIDTH + PILL_PADDING * 2,
+          height: TEXT_HEIGHT,
+        };
+  const valueLabelTop = (bar: BarDatum) => toY(Math.max(0, bar.value)) - TEXT_HEIGHT - 3;
+  // A bar's value label is dropped if it would collide with the reference label.
+  const showsValueLabel = (bar: BarDatum, i: number) =>
+    showValueLabels &&
+    (targetLabelBox === null ||
+      !boxesOverlap({ x: slot * i, y: valueLabelTop(bar), width: slot, height: TEXT_HEIGHT }, targetLabelBox));
+
   const clipProps = useAnimatedProps(() => ({ y: baseY - baseY * reveal.get(), height: baseY * reveal.get() }));
 
   return (
@@ -97,14 +119,17 @@ export function BarChart({
         {width > 0 &&
           bars.map((bar, i) => (
             <View key={`labels-${i}`} pointerEvents="none" style={[StyleSheet.absoluteFill, { left: slot * i, width: slot }]}>
-              {showValueLabels && (
-                <Text style={[styles.value, { top: toY(Math.max(0, bar.value)) - TEXT_HEIGHT - 3 }]}>{bar.valueLabel}</Text>
-              )}
+              {showsValueLabel(bar, i) && <Text style={[styles.value, { top: valueLabelTop(bar) }]}>{bar.valueLabel}</Text>}
               {bar.label !== '' && <Text style={[styles.label, { top: baseY + 4 }]}>{bar.label}</Text>}
             </View>
           ))}
-        {width > 0 && target !== undefined && (
-          <Text style={[styles.target, { top: toY(target.value) - TEXT_HEIGHT - 2 }]}>{target.label}</Text>
+        {width > 0 && target !== undefined && targetLabelBox !== null && (
+          <View
+            pointerEvents="none"
+            style={[styles.targetPill, { top: targetLabelBox.y }]}
+            onLayout={(event) => setTargetLabelWidth(event.nativeEvent.layout.width)}>
+            <Text style={styles.target}>{target.label}</Text>
+          </View>
         )}
         {(startLabel !== undefined || endLabel !== undefined) && (
           <View style={[styles.ends, { top: baseY + 4 }]}>
@@ -129,7 +154,16 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   label: { ...typography.caption, position: 'absolute', left: 0, right: 0, fontSize: 11, textAlign: 'center' },
-  target: { ...typography.caption, position: 'absolute', right: 0, fontSize: 10 },
+  targetPill: {
+    position: 'absolute',
+    left: 0,
+    height: TEXT_HEIGHT,
+    justifyContent: 'center',
+    paddingHorizontal: PILL_PADDING,
+    borderRadius: TEXT_HEIGHT / 2,
+    backgroundColor: colors.labelPill,
+  },
+  target: { ...typography.caption, fontSize: 10 },
   ends: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between' },
   endLabel: { ...typography.caption, fontSize: 11 },
 });

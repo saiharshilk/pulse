@@ -44,14 +44,6 @@ describe('computeSummaries', () => {
     expect(scores.some((score) => score < RECOVERY_BANDS.yellow)).toBe(true);
   });
 
-  it('keeps daily steps in a realistic range on full days', () => {
-    const fullDays = summariesFor(3, 60).slice(1, -1);
-    expect(fullDays.every((summary) => summary.steps <= 14000)).toBe(true);
-    // A charging gap can take a walk out of a day, so only most days must reach 4,000.
-    const inRange = fullDays.filter((summary) => summary.steps >= 4000);
-    expect(inRange.length / fullDays.length).toBeGreaterThan(0.9);
-  });
-
   it('computes 90 days quickly', () => {
     const history = generateMockHistory({ seed: 3, now: NOW, days: 90 });
     const heartRates = dropMissingHeartRates(history.heartRates);

@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
 const DATABASE_NAME = 'pulse.db';
-const SCHEMA_VERSION = '2';
+const SCHEMA_VERSION = '3';
 // Rows per INSERT. Sending many rows at once is far faster than one async call per row.
 const INSERT_CHUNK_ROWS = 400;
 
@@ -19,8 +19,9 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   await db.execAsync(CREATE_TABLES_SQL);
   // Migrations check this value and upgrade step by step.
   const stored = await db.getFirstAsync<{ value: string }>("SELECT value FROM kv WHERE key = 'schema_version'");
-  if (stored?.value === '1') {
-    // Version 2: the mock day plans changed. Clear the old readings so the next sync regenerates them.
+  if (stored?.value === '1' || stored?.value === '2') {
+    // Versions 2 and 3: the mock data changed (day plans, then daily step totals).
+    // Clear the old readings so the next sync regenerates them.
     await db.execAsync("DELETE FROM heart_rate; DELETE FROM steps; DELETE FROM kv WHERE key = 'lastSyncTs';");
   }
   await db.runAsync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', 'schema_version', SCHEMA_VERSION);

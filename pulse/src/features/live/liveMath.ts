@@ -4,6 +4,7 @@ import { MS_PER_MINUTE } from '@/utils/time';
 
 export const LIVE = {
   chartWindowMs: MS_PER_MINUTE, // the live chart shows the last 60 seconds
+  chartMinSpanBpm: 20, // so a steady 72 bpm doesn't look like big swings
   spo2MeasureMs: 30_000, // how long a spot check collects readings
   spo2TimeoutMs: 40_000, // give up if nothing valid has arrived by now
   spo2Min: 70, // readings outside 70–100 are noise
