@@ -68,7 +68,8 @@ src/data/db/         SQLite setup and repositories
 src/data/            syncService, syncFilters, deviceManager
 src/scoring/         sleep, recovery, strain, activities, calories, health monitor, engine
 src/store/           zustand app store
-src/features/        one folder per screen (home, sleep, recovery, strain, appInit) plus shared hooks
+src/features/        one folder per screen (home, sleep, recovery, strain, healthMonitor, live, trends,
+                     appInit) plus shared hooks
 src/insights/        rule-based insight sentences
 src/utils/           format, time, series, haptics
 __tests__/           Jest tests for pure logic
@@ -77,7 +78,7 @@ __tests__/           Jest tests for pure logic
 ## Status
 
 **Prompt 1 (done):** foundation, full scoring engine, design system, tab shell, and the Home screen on
-mock data. Health, Device, Live and Health Monitor are still placeholders.
+mock data. The Device tab is still a placeholder.
 
 **Calibration fixes:**
 - Strain counts everyday movement: a light zone (hrr 0.30–0.50, weight 0.5, reported as `lightMinutes`) and a load divisor of 200. Mock days now include on-feet time so desk, walking, workout and hard days land in distinct ranges.
@@ -90,6 +91,11 @@ mock data. Health, Device, Live and Health Monitor are still placeholders.
 - `useDaySamples(dayKey)` loads a day's raw heart rate and steps for the charts and caches them per day and per sync.
 - Each screen's info button opens a sheet explaining how PULSE estimates its metrics from the ring's heart rate and steps.
 - Web: `metro.config.js` lets expo-sqlite load on web. Web is only for checking layouts; the app targets iPhone.
+
+**Prompt 3 (done):** Health Monitor, Live, and the Health (trends) tab.
+- **Health Monitor** (`/health-monitor`) compares last night's resting and sleeping heart rate with your normal range (30-day mean ± 1.5 SD). The range math is in `src/scoring/healthMonitor.ts`. SpO2 spot checks are listed but never counted in the status.
+- **Live** (`/live`, a full-screen modal) streams heart rate with a beating heart, a 60-second chart and session stats, and runs SpO2 spot checks: 30 seconds, median of valid readings (70–100), saved to SQLite. Open it on SpO2 with `/live?mode=spo2`. Only one stream runs at a time, and streams stop when the screen closes or the app goes to the background. The pure helpers are in `src/features/live/liveMath.ts`.
+- **Health tab** shows nine metrics over 7, 30 or 90 days, each with its average and a half-vs-half trend arrow. Tapping a card opens `/trend/[metric]` with min, max, best and worst days and a daily list; tapping a day opens it on Home. The aggregation is in `src/features/trends/trendMath.ts`.
 
 PULSE's scores are simple, explainable approximations, and every number is in
 `src/scoring/scoringConstants.ts`.

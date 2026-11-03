@@ -56,4 +56,16 @@ export const layout = {
   sheetRadius: 24,
   sheetMaxHeightRatio: 0.8,
   progressDotSize: 8,
+
+  // Live screen
+  liveHeartSize: 110,
+  liveHeartPulseScale: 0.16, // how much the heart grows on each beat
+  liveChartHeight: 120,
+  measuringRingSize: 200,
+  measuringRingStroke: 10,
+  measuringSpinMs: 1400,
+
+  // Health tab
+  trendCardChartHeight: 110,
+  trendDetailChartHeight: 200,
 } as const;

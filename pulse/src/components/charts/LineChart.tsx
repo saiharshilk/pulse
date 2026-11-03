@@ -1,7 +1,7 @@
 import { useId, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { useAnimatedProps } from 'react-native-reanimated';
-import Svg, { ClipPath, Defs, G, Line, Polyline, Rect } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, G, Line, Polyline, Rect } from 'react-native-svg';
 
 import { colors } from '@/theme/colors';
 import { typography } from '@/theme/typography';
@@ -16,6 +16,7 @@ const PAD_LEFT = 30; // room for the y-axis labels
 const PAD_TOP = 8;
 const PAD_BOTTOM = 4;
 const LINE_WIDTH = 2;
+const DOT_RADIUS = 3.5;
 const Y_LABEL_HALF_HEIGHT = 7;
 const DEFAULT_MAX_GAP_MS = 20 * MS_PER_MINUTE;
 
@@ -33,6 +34,8 @@ type LineChartProps = {
   startLabel?: string;
   endLabel?: string;
   maxGapMs?: number; // longer gaps break the line
+  variant?: 'line' | 'dots'; // dots suit sparse readings like SpO2 spot checks
+  animateReveal?: boolean; // false for live charts that update every second
 };
 
 export function LineChart({
@@ -47,10 +50,12 @@ export function LineChart({
   startLabel,
   endLabel,
   maxGapMs = DEFAULT_MAX_GAP_MS,
+  variant = 'line',
+  animateReveal = true,
 }: LineChartProps) {
   const [width, setWidth] = useState(0);
   const clipId = svgId('line-clip', useId());
-  const reveal = useChartReveal(data.length);
+  const reveal = useChartReveal(data.length, animateReveal);
   const plotWidth = Math.max(0, width - PAD_LEFT);
   const clipProps = useAnimatedProps(() => ({ width: plotWidth * reveal.get() }));
 
@@ -65,7 +70,7 @@ export function LineChart({
 
   const toX = (value: number) => PAD_LEFT + scaleLinear(value, [x0, x1], [0, plotWidth]);
   const toY = (value: number) => scaleLinear(value, [y.min, y.max], [height - PAD_BOTTOM, PAD_TOP]);
-  const canDraw = width > 0 && data.length >= 2;
+  const canDraw = width > 0 && data.length >= (variant === 'dots' ? 1 : 2);
 
   return (
     <View>
@@ -111,7 +116,9 @@ export function LineChart({
               />
             )}
             <G clipPath={`url(#${clipId})`}>
-              {splitAtGaps(data, maxGapMs).map((segment) => (
+              {variant === 'dots' &&
+                data.map((point) => <Circle key={point.x} cx={toX(point.x)} cy={toY(point.y)} r={DOT_RADIUS} fill={color} />)}
+              {variant === 'line' && splitAtGaps(data, maxGapMs).map((segment) => (
                 <Polyline
                   key={segment[0].x}
                   points={toPolylinePoints(segment, toX, toY)}

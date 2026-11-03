@@ -35,7 +35,8 @@ export default function RootLayout() {
           <Stack.Screen name="recovery" />
           <Stack.Screen name="strain" />
           <Stack.Screen name="health-monitor" />
-          <Stack.Screen name="live" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="live" options={{ presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="trend/[metric]" />
         </Stack>
       )}
     </>

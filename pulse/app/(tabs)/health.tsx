@@ -1,5 +1,3 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { HealthScreen } from '@/features/trends/HealthScreen';
 
-export default function HealthRoute() {
-  return <PlaceholderScreen title="Health" promptNumber={3} />;
-}
+export default HealthScreen;
