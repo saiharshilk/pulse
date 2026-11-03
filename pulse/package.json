@@ -48,7 +48,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "generate-icons": "node scripts/generate-icons.js"
   },
   "private": true,
   "jest": {

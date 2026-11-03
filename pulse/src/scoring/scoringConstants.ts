@@ -13,6 +13,8 @@ export const SLEEP = {
   strainThreshold: 12, // only strain above a normal day's adds sleep need
   strainMinutesPerPoint: 3,
   strainCapMinutes: 30,
+  // TODO(spec): the prompt set the caps but not this share. 0.15 (was 0.25) brings the average need
+  // to about 8:25, inside the 8:15–8:30 target.
   debtFraction: 0.15, // share of recent shortfalls added back as debt
   debtLookbackNights: 3,
   debtCapMinutes: 60,

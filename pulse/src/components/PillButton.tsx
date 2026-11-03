@@ -10,7 +10,13 @@ type PillButtonProps = { title: string; onPress: () => void; disabled?: boolean 
 
 export function PillButton({ title, onPress, disabled = false }: PillButtonProps) {
   return (
-    <PressableOpacity onPress={onPress} disabled={disabled} style={[styles.pill, disabled && styles.disabled]}>
+    <PressableOpacity
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled }}
+      style={[styles.pill, disabled && styles.disabled]}>
       <Text style={[typography.labelCaps, disabled && styles.disabledText]}>{title}</Text>
     </PressableOpacity>
   );

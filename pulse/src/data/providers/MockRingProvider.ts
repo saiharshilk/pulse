@@ -1,4 +1,3 @@
-import { MOCK_SEED } from '@/config/appConfig';
 import { MOCK_RING } from '@/data/mock/mockConstants';
 import { generateMockHistory } from '@/data/mock/mockDataGenerator';
 import { createSeededRandom } from '@/data/mock/seededRandom';
@@ -24,7 +23,13 @@ export class MockRingProvider implements RingDataProvider {
   private state: ConnectionState = { status: 'disconnected' };
   private listeners = new Set<(s: ConnectionState) => void>();
   private startedAt = Date.now();
-  private realtimeRandom = createSeededRandom(MOCK_SEED);
+  private seed: number;
+  private realtimeRandom: ReturnType<typeof createSeededRandom>;
+
+  constructor(seed: number) {
+    this.seed = seed;
+    this.realtimeRandom = createSeededRandom(seed);
+  }
 
   // Stored only so later prompts can read back what was set.
   ringTime: number | null = null;
@@ -76,7 +81,7 @@ export class MockRingProvider implements RingDataProvider {
   async syncHistory(sinceTs: number): Promise<RingSyncBatch> {
     const now = Date.now();
     const days = Math.ceil((now - sinceTs) / MS_PER_DAY) + 1;
-    const history = generateMockHistory({ seed: MOCK_SEED, now, days });
+    const history = generateMockHistory({ seed: this.seed, now, days });
     return {
       heartRates: history.heartRates.filter((reading) => reading.ts >= sinceTs),
       // Keep any bucket that finished after the last sync, even if it started before it.

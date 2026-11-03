@@ -5,6 +5,7 @@ import { BarChart } from '@/components/charts/BarChart';
 import { HorizontalBars } from '@/components/charts/HorizontalBars';
 import { SleepTimeline } from '@/components/charts/SleepTimeline';
 import { FadeInSection } from '@/components/FadeInSection';
+import { SkeletonCard } from '@/components/SkeletonCard';
 import { StatTile } from '@/components/StatTile';
 import { layout } from '@/theme/layout';
 import { spacing } from '@/theme/spacing';
@@ -13,7 +14,7 @@ import { typography } from '@/theme/typography';
 import type { SleepView } from './sleepView';
 
 type SleepDetailSectionsProps = {
-  view: SleepView;
+  view: SleepView & { isLoadingSamples: boolean };
   onDiveTargetLayout: (y: number) => void; // where "DIVE INTO MY SLEEP" scrolls to
 };
 
@@ -24,8 +25,8 @@ export function SleepDetailSections({ view, onDiveTargetLayout }: SleepDetailSec
   return (
     <>
       <FadeInSection index={3} onLayout={(event) => onDiveTargetLayout(event.nativeEvent.layout.y)}>
-        <ChartCard title="Last night's sleep" emptyText={view.timeline === null ? NO_SLEEP : null}>
-          {view.timeline !== null && <SleepTimeline {...view.timeline} />}
+        <ChartCard title="Last night's sleep" emptyText={view.timeline === null ? NO_SLEEP : null} summary={view.timelineSummary}>
+          {view.timeline !== null && (view.isLoadingSamples ? <SkeletonCard lines={1} /> : <SleepTimeline {...view.timeline} />)}
           <View style={styles.tiles}>
             <StatTile value={view.hoursAsleep} caption="HOURS ASLEEP" />
             <StatTile value={view.timeInBed} caption="TIME IN BED" />
@@ -54,7 +55,7 @@ export function SleepDetailSections({ view, onDiveTargetLayout }: SleepDetailSec
       </FadeInSection>
 
       <FadeInSection index={6}>
-        <ChartCard title="Last 7 nights" emptyText={view.hasLastNights ? null : 'No sleep detected in the last 7 nights.'}>
+        <ChartCard title="Last 7 nights" summary={view.lastNightsSummary} emptyText={view.hasLastNights ? null : 'No sleep detected in the last 7 nights.'}>
           <BarChart bars={view.lastNights} target={view.needTarget ?? undefined} height={layout.barChartHeight} />
         </ChartCard>
       </FadeInSection>

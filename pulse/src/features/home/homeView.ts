@@ -2,6 +2,7 @@
 import type { Ionicons } from '@expo/vector-icons';
 import type { ComponentProps } from 'react';
 
+import { recoveryDialLabel, sleepDialLabel, strainDialLabel } from '@/features/shared/accessibilityLabels';
 import { RECOVERY_BANDS, STRAIN } from '@/scoring/scoringConstants';
 import { colors } from '@/theme/colors';
 import type { DailySummary } from '@/types/computed';
@@ -26,6 +27,7 @@ export type DialView = {
   color: string;
   label: string;
   placeholder: boolean;
+  accessibilityLabel: string;
 };
 
 export type HealthStatusView = {
@@ -75,6 +77,7 @@ function sleepDial(summary: DailySummary | null): DialView {
     color: colors.sleep,
     label: 'SLEEP',
     placeholder: sleep === null,
+    accessibilityLabel: sleepDialLabel(sleep?.performance ?? null),
   };
 }
 
@@ -88,6 +91,7 @@ function recoveryDial(summary: DailySummary | null): DialView {
     color: score === null ? colors.track : recoveryColor(score),
     label: recovery?.isCalibrating === true ? 'CALIBRATING' : 'RECOVERY',
     placeholder: score === null,
+    accessibilityLabel: recoveryDialLabel(score, recovery?.isCalibrating === true),
   };
 }
 
@@ -100,6 +104,7 @@ function strainDial(summary: DailySummary | null): DialView {
     color: colors.strain,
     label: 'STRAIN',
     placeholder: summary === null,
+    accessibilityLabel: strainDialLabel(score),
   };
 }
 

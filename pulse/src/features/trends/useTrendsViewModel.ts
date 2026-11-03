@@ -17,5 +17,5 @@ export function useTrendsViewModel(range: TrendRange) {
     return TREND_METRIC_KEYS.map((metric) => buildTrendCard(metric, days, range, { profile, spo2Checks }));
   }, [summaries, spo2Checks, profile, range]);
 
-  return { cards };
+  return { cards, hasData: summaries.length > 0 };
 }

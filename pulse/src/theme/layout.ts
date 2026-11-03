@@ -68,4 +68,17 @@ export const layout = {
   // Health tab
   trendCardChartHeight: 110,
   trendDetailChartHeight: 200,
+
+  // Feedback and loading
+  toastMs: 2000,
+  skeletonPulseMs: 800,
+
+  // Splash intro and onboarding
+  logoSize: 120,
+  splashIntroMs: 600,
+  splashFadeOutMs: 350,
+  ringIllustrationWidth: 120,
+  pairingPhoneWidth: 70,
+  pairingNodeSize: 18,
+  pairingCheckSize: 64,
 } as const;

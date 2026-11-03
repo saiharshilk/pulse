@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { startRealtime } from '@/data/deviceManager';
 import { useAppStore } from '@/store/appStore';
+import { successHaptic, warningHaptic } from '@/utils/haptics';
 
 import { LIVE, spo2Outcome } from './liveMath';
 import { useStopOnBackground } from './useStopOnBackground';
@@ -40,10 +41,14 @@ export function useSpO2SpotCheck(enabled: boolean) {
       setPhase({ kind: 'result', percent, saveState: 'saving' });
       saveSpO2Check({ ts: Date.now(), percent })
         .then(() => {
-          if (isMounted.current) setPhase({ kind: 'result', percent, saveState: 'saved' });
+          if (!isMounted.current) return;
+          successHaptic();
+          setPhase({ kind: 'result', percent, saveState: 'saved' });
         })
         .catch(() => {
-          if (isMounted.current) setPhase({ kind: 'result', percent, saveState: 'failed' });
+          if (!isMounted.current) return;
+          warningHaptic();
+          setPhase({ kind: 'result', percent, saveState: 'failed' });
         });
     },
     [saveSpO2Check, stopAll],
@@ -74,6 +79,7 @@ export function useSpO2SpotCheck(enabled: boolean) {
       if (outcome.kind === 'result') finish(outcome.percent);
       else if (outcome.kind === 'failed') {
         stopAll();
+        warningHaptic();
         setPhase({ kind: 'failed' });
       } else setPhase({ kind: 'measuring', elapsedMs });
     }, LIVE.tickMs);

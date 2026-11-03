@@ -81,3 +81,15 @@ export function formatDaysAgo(ts: number, now: number): string {
 export function formatDayAndTime(ts: number): string {
   return `${format(ts, 'EEE, MMM d').toUpperCase()} · ${formatClockTime(ts)}`;
 }
+
+// → "Synced just now", "Last synced 2 min ago", "Last synced 3 hr ago", "Last synced 2 days ago"
+export function formatLastSynced(ts: number | null, now: number): string {
+  if (ts === null) return 'Not synced yet';
+  const minutes = Math.floor((now - ts) / MS_PER_MINUTE);
+  if (minutes < 1) return 'Synced just now';
+  if (minutes < 60) return `Last synced ${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Last synced ${hours} hr ago`;
+  const days = Math.floor(hours / 24);
+  return `Last synced ${days} ${days === 1 ? 'day' : 'days'} ago`;
+}

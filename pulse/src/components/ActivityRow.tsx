@@ -7,6 +7,8 @@ import { layout } from '@/theme/layout';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 
+import { PressableOpacity } from './PressableOpacity';
+
 type ActivityRowProps = {
   icon: ComponentProps<typeof Ionicons>['name'];
   iconColor: string;
@@ -15,12 +17,13 @@ type ActivityRowProps = {
   duration: string;
   tag?: string; // e.g. "EST."
   badge?: ReactNode;
+  onPress?: () => void; // makes the row tappable, e.g. to rename the activity
 };
 
 // One row in an activity list: icon, name, time range, duration and an optional badge.
-export function ActivityRow({ icon, iconColor, title, timeRange, duration, tag, badge }: ActivityRowProps) {
-  return (
-    <View style={styles.row}>
+export function ActivityRow({ icon, iconColor, title, timeRange, duration, tag, badge, onPress }: ActivityRowProps) {
+  const content = (
+    <>
       <View style={styles.iconCircle}>
         <Ionicons name={icon} size={18} color={iconColor} />
       </View>
@@ -35,7 +38,17 @@ export function ActivityRow({ icon, iconColor, title, timeRange, duration, tag, 
       </View>
       <Text style={typography.metricValue}>{duration}</Text>
       {badge}
-    </View>
+    </>
+  );
+  if (onPress === undefined) return <View style={styles.row}>{content}</View>;
+  return (
+    <PressableOpacity
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, ${timeRange}, ${duration}. Rename`}
+      style={styles.row}>
+      {content}
+    </PressableOpacity>
   );
 }
 

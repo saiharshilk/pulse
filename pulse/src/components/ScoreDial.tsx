@@ -26,6 +26,7 @@ type ScoreDialProps = {
   placeholder?: boolean; // shows "—" with an empty arc
   large?: boolean; // detail screens use the bigger value text
   topLabel?: string; // small text inside the dial, above the value
+  accessibilityLabel?: string; // e.g. "Recovery 72 percent, green"
   onPress?: () => void;
 };
 
@@ -40,6 +41,7 @@ export function ScoreDial({
   placeholder = false,
   large = false,
   topLabel,
+  accessibilityLabel,
   onPress,
 }: ScoreDialProps) {
   const strokeWidth = size * layout.dialStrokeRatio;
@@ -75,7 +77,14 @@ export function ScoreDial({
   }
 
   return (
-    <PressableOpacity onPress={handlePress} disabled={onPress === undefined} style={[styles.root, { width: size }]}>
+    <PressableOpacity
+      onPress={handlePress}
+      disabled={onPress === undefined}
+      accessible
+      accessibilityRole={onPress === undefined ? 'image' : 'button'}
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={onPress === undefined ? undefined : 'Opens details'}
+      style={[styles.root, { width: size }]}>
       <View style={{ width: size, height: size }}>
         <Svg width={size} height={size}>
           <Circle cx={center} cy={center} r={radius} stroke={colors.track} strokeWidth={strokeWidth} fill="none" />
@@ -99,7 +108,12 @@ export function ScoreDial({
               {topLabel}
             </Text>
           )}
-          <Text style={[valueStyle, { fontSize: valueFontSize }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
+          <Text
+            style={[valueStyle, { fontSize: valueFontSize }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}
+            maxFontSizeMultiplier={1.2}>
             {placeholder ? NO_VALUE : (valueText ?? String(value))}
             {!placeholder && suffix !== undefined && <Text style={[suffixStyle, { fontSize: suffixFontSize }]}>{suffix}</Text>}
           </Text>

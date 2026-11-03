@@ -13,12 +13,18 @@ import { typography } from '@/theme/typography';
 import { TrendChart } from './TrendChart';
 import { TREND_EMPTY_TEXT, type TrendCardView } from './trendView';
 
+const TREND_WORDS = { up: 'up', down: 'down', flat: 'steady' } as const;
+
 type TrendCardProps = { card: TrendCardView; onPress: () => void };
 
 // One metric on the Health tab. Memoized so changing one card doesn't redraw all nine charts.
 export const TrendCard = memo(function TrendCard({ card, onPress }: TrendCardProps) {
   return (
-    <PressableOpacity onPress={onPress}>
+    <PressableOpacity
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${card.title}, average ${card.averageText}, ${card.caption}, trending ${TREND_WORDS[card.trend]}`}
+      accessibilityHint="Opens the full trend">
       <Card style={styles.card}>
         <View style={styles.header}>
           <Text style={[typography.labelCaps, styles.title]}>{card.title}</Text>

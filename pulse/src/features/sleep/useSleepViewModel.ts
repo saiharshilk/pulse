@@ -6,5 +6,5 @@ import { buildSleepView } from './sleepView';
 export function useSleepViewModel() {
   const { summary, history, dayLabel } = useSelectedDay();
   const samples = useDaySamples(summary?.dayKey ?? null);
-  return { dayLabel, ...buildSleepView(summary, history, samples.heartRates) };
+  return { dayLabel, isLoadingSamples: samples.isLoading, ...buildSleepView(summary, history, samples.heartRates) };
 }

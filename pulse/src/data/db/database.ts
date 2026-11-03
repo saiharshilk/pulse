@@ -10,6 +10,7 @@ const CREATE_TABLES_SQL = `
   CREATE TABLE IF NOT EXISTS steps (start INTEGER PRIMARY KEY, steps INTEGER, calories REAL, distance REAL);
   CREATE TABLE IF NOT EXISTS spo2_checks (ts INTEGER PRIMARY KEY, percent INTEGER);
   CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);
+  CREATE TABLE IF NOT EXISTS activity_names (id TEXT PRIMARY KEY, name TEXT);
 `;
 
 let openPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -26,6 +27,21 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   }
   await db.runAsync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', 'schema_version', SCHEMA_VERSION);
   return db;
+}
+
+// Deletes the ring's stored readings, so the next sync downloads them again.
+export async function clearRawReadings(): Promise<void> {
+  const db = await getDatabase();
+  await db.execAsync("DELETE FROM heart_rate; DELETE FROM steps; DELETE FROM kv WHERE key = 'lastSyncTs';");
+}
+
+// Deletes everything: readings, spot checks, activity names, profile and settings.
+export async function clearEverything(): Promise<void> {
+  const db = await getDatabase();
+  await db.execAsync(
+    'DELETE FROM heart_rate; DELETE FROM steps; DELETE FROM spo2_checks; DELETE FROM activity_names; DELETE FROM kv;',
+  );
+  await db.runAsync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', 'schema_version', SCHEMA_VERSION);
 }
 
 // Opens the database once and shares it. A failed open can be retried.
