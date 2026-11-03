@@ -77,5 +77,10 @@ __tests__/           Jest tests for pure logic
 **Prompt 1 (done):** foundation, full scoring engine, design system, tab shell, and the Home screen on
 mock data. Health, Device, Live, Sleep, Recovery, Strain and Health Monitor are placeholders for now.
 
+**Calibration fixes:**
+- Strain counts everyday movement: a light zone (hrr 0.30–0.50, weight 0.5, reported as `lightMinutes`) and a load divisor of 200. Mock days now include on-feet time so desk, walking, workout and hard days land in distinct ranges.
+- Bedtime and wake time use the 5-minute heart-rate samples, so they land on realistic minutes instead of 15-minute boundaries. Awake intervals inside the night still use 15-minute epochs.
+- Tests always run in America/Chicago (`jest.globalSetup.js`), including checks on the 23-hour and 25-hour daylight-saving days.
+
 PULSE's scores are simple, explainable approximations, and every number is in
 `src/scoring/scoringConstants.ts`.

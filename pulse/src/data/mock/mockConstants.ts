@@ -54,7 +54,7 @@ export const MOCK_HEART_RATE = {
   restDrift: 6, // slow up/down swing over the day
   restNoiseSd: 1.5,
   rest: { min: 60, max: 78 },
-  walk: { min: 85, max: 105 },
+  walk: { min: 95, max: 105 }, // also used for on-feet time
   workout: { min: 130, max: 175 },
   workoutSpreadSd: 6,
   rampMinutes: 5,
@@ -67,18 +67,31 @@ export const MOCK_HEART_RATE = {
 
 export const MOCK_ACTIVITY = {
   workoutDayChance: 0.5, // about 3–4 days a week
-  workoutMinutes: { min: 30, max: 75 },
-  workoutTargetBpm: { min: 135, max: 170 },
+  workoutMinutes: { min: 45, max: 70 },
+  workoutTargetBpm: { min: 143, max: 158 },
+  hardWorkoutChance: 0.25, // of workout days
+  hardWorkoutMinutes: { min: 60, max: 75 },
+  hardWorkoutTargetBpm: { min: 160, max: 170 },
+  walkingDayChance: 0.5, // of days without a workout
   morningWorkoutChance: 0.35,
   morningWorkoutDelayMinutes: { min: 45, max: 90 },
   eveningWorkoutStart: { min: 1020, max: 1140 }, // 17:00–19:00
   walksPerDay: { min: 2, max: 3 },
+  walksPerWalkingDay: { min: 3, max: 4 },
+  // Total time on your feet (walks plus chores and errands), by kind of day.
+  activeMinutes: {
+    desk: { min: 70, max: 110 },
+    walking: { min: 130, max: 220 },
+    workout: { min: 80, max: 110 },
+  },
+  onFeetBlockMinutes: { min: 15, max: 45 },
   walkMinutes: { min: 15, max: 35 },
   walkEarliestAfterWakeMinutes: 30,
   walkLatestBeforeBedMinutes: 90,
   // Steps per 15-minute bucket while at the desk, per minute otherwise.
   deskStepsPerBucket: { min: 15, max: 60 },
   walkStepsPerMinute: { min: 80, max: 110 },
+  onFeetStepsPerMinute: { min: 10, max: 25 },
   workoutStepsPerMinute: { min: 40, max: 90 },
   wakeUpStepsPerBucket: { min: 10, max: 40 },
   chargingStart: { min: 780, max: 960 }, // 13:00–16:00

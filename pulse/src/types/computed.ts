@@ -40,6 +40,7 @@ export type StrainMetrics = {
   averageHR: number;
   maxHR: number;
   zoneMinutes: number[];
+  lightMinutes: number; // hrr 0.30–0.50, below Zone 1
   calories: number;
   window: { start: number; end: number };
 };

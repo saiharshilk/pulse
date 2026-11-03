@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
 const DATABASE_NAME = 'pulse.db';
-const SCHEMA_VERSION = '1';
+const SCHEMA_VERSION = '2';
 // Rows per INSERT. Sending many rows at once is far faster than one async call per row.
 const INSERT_CHUNK_ROWS = 400;
 
@@ -17,8 +17,13 @@ let openPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync(DATABASE_NAME);
   await db.execAsync(CREATE_TABLES_SQL);
-  // Future migrations check this value and upgrade step by step.
-  await db.runAsync('INSERT OR IGNORE INTO kv (key, value) VALUES (?, ?)', 'schema_version', SCHEMA_VERSION);
+  // Migrations check this value and upgrade step by step.
+  const stored = await db.getFirstAsync<{ value: string }>("SELECT value FROM kv WHERE key = 'schema_version'");
+  if (stored?.value === '1') {
+    // Version 2: the mock day plans changed. Clear the old readings so the next sync regenerates them.
+    await db.execAsync("DELETE FROM heart_rate; DELETE FROM steps; DELETE FROM kv WHERE key = 'lastSyncTs';");
+  }
+  await db.runAsync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', 'schema_version', SCHEMA_VERSION);
   return db;
 }
 
@@ -42,7 +47,7 @@ export async function bulkInsert(table: string, columns: string[], rows: number[
   const insertSql = (rowCount: number) =>
     `INSERT OR IGNORE INTO ${table} (${columns.join(',')}) VALUES ${Array(rowCount).fill(rowPlaceholder).join(',')}`;
 
-  await db.withExclusiveTransactionAsync(async (txn) => {
+  const insertAll = async (txn: SQLite.SQLiteDatabase) => {
     const fullChunkCount = Math.floor(rows.length / INSERT_CHUNK_ROWS);
     if (fullChunkCount > 0) {
       const statement = await txn.prepareAsync(insertSql(INSERT_CHUNK_ROWS));
@@ -59,5 +64,13 @@ export async function bulkInsert(table: string, columns: string[], rows: number[
     if (leftovers.length > 0) {
       await txn.runAsync(insertSql(leftovers.length), leftovers.flat());
     }
-  });
+  };
+
+  // Exclusive transactions keep other queries out, but expo-sqlite doesn't support them on web.
+  // There a normal transaction is fine: syncService never runs two syncs at once.
+  if (process.env.EXPO_OS === 'web') {
+    await db.withTransactionAsync(() => insertAll(db));
+  } else {
+    await db.withExclusiveTransactionAsync(insertAll);
+  }
 }

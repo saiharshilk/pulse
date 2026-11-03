@@ -17,6 +17,7 @@ export const SLEEP = {
   debtLookbackNights: 3,
   debtCapMinutes: 90,
   consistencyNights: 4,
+  edgeMaxSteps: 120, // a bucket with more steps than this can't contain falling asleep or still sleeping
 } as const;
 
 export const SLEEP_BANDS = { optimal: 85, sufficient: 70 } as const;
@@ -42,7 +43,7 @@ export const RECOVERY_BANDS = { green: 67, yellow: 34 } as const;
 
 export const STRAIN = {
   maxScore: 21,
-  loadScale: 300,
+  loadScale: 200,
   defaultRestingHR: 60,
   noSleepStartHour: 6,
   noSleepEndHour: 23,
@@ -58,6 +59,8 @@ export const HEART_RATE = {
   // Lower edge of Zones 1–5, as a fraction of heart-rate reserve.
   zoneFloors: [0.5, 0.6, 0.7, 0.8, 0.9],
   zoneWeights: [1, 2, 3, 4, 5],
+  // Everyday movement below Zone 1. Adds strain, but stays out of the zone breakdown.
+  lightZone: { floor: 0.3, weight: 0.5 },
 } as const;
 
 export const ACTIVITY = {

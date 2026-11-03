@@ -43,13 +43,21 @@ describe('calculateStrain', () => {
     expect(strainOf(makeDay(186)).score).toBeLessThanOrEqual(21);
   });
 
+  it('counts light minutes for strain, separately from the zones', () => {
+    const lightDay = strainOf(makeDay(68, { fromMinute: 300, minutes: 120, bpm: 100 })); // hrr 0.36
+    expect(lightDay.lightMinutes).toBeGreaterThanOrEqual(115);
+    expect(lightDay.zoneMinutes.every((minutes) => minutes === 0)).toBe(true);
+    expect(lightDay.score).toBeGreaterThan(0);
+  });
+
   it('counts long gaps as zero load', () => {
     // Two hard readings 60 minutes apart are not joined up into an hour of effort.
-    const score = strainOf([
+    const gappy = strainOf([
       { ts: START, bpm: 180 },
       { ts: START + 60 * MS_PER_MINUTE, bpm: 180 },
-    ]).score;
-    expect(score).toBeLessThan(1);
+    ]);
+    expect(gappy.score).toBeLessThan(strainOf(makeDay(68, { fromMinute: 0, minutes: 60, bpm: 180 })).score);
+    expect(gappy.score).toBeLessThan(2);
   });
 });
 
@@ -58,6 +66,9 @@ describe('detectActivities', () => {
     const window = { start: START, end: END };
     const shared = { window, restingHR: RESTING_HR, maxHR: MAX_HR };
     expect(detectActivities({ heartRates: makeDay(68), ...shared })).toEqual([]);
+    // Light effort (hrr below 0.50) adds strain but is not an activity.
+    const lightDay = makeDay(68, { fromMinute: 300, minutes: 120, bpm: 100 });
+    expect(detectActivities({ heartRates: lightDay, ...shared })).toEqual([]);
 
     const activities = detectActivities({
       heartRates: makeDay(68, { fromMinute: 300, minutes: 60, bpm: 155 }),
