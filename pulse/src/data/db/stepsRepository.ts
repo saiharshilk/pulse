@@ -10,6 +10,16 @@ export async function insertSteps(buckets: StepSample[]): Promise<void> {
   );
 }
 
+// `start` is included, `end` is not.
+export async function getStepsBetween(start: number, end: number): Promise<StepSample[]> {
+  const db = await getDatabase();
+  return db.getAllAsync<StepSample>(
+    'SELECT start, steps, calories, distance AS distanceMeters FROM steps WHERE start >= ? AND start < ? ORDER BY start',
+    start,
+    end,
+  );
+}
+
 export async function getAllSteps(): Promise<StepSample[]> {
   const db = await getDatabase();
   return db.getAllAsync<StepSample>(

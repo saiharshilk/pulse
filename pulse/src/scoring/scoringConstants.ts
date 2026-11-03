@@ -53,6 +53,14 @@ export const STRAIN = {
 
 export const STRAIN_BANDS = { moderate: 10, strenuous: 14, allOut: 18 } as const;
 
+// The strain range that suits each recovery band.
+export const OPTIMAL_STRAIN = {
+  green: { low: 14, high: 18 },
+  yellow: { low: 10, high: 14 },
+  red: { low: 0, high: 10 },
+  calibrating: { low: 10, high: 14 },
+} as const;
+
 export const HEART_RATE = {
   maxHrBase: 208,
   maxHrAgeFactor: 0.7,

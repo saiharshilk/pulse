@@ -40,4 +40,20 @@ export const layout = {
   // Heart rate card
   sparklineHeight: 72,
   sparklineMaxPoints: 96,
+
+  // Detail screens and charts
+  bigDialWidthRatio: 0.55,
+  bigDialTopLabelRatio: 0.06,
+  chartRevealMs: 600,
+  sectionFadeMs: 400,
+  sectionFadeStaggerMs: 60,
+  lineChartHeight: 140,
+  barChartHeight: 150,
+  sleepTimelineHrHeight: 56,
+  sleepTimelineBarHeight: 16,
+  horizontalBarHeight: 8,
+  gaugeHeight: 10,
+  sheetRadius: 24,
+  sheetMaxHeightRatio: 0.8,
+  progressDotSize: 8,
 } as const;

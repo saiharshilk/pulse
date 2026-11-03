@@ -18,18 +18,22 @@ type MetricRowProps = {
   trend?: Trend;
   higherIsBetter?: boolean;
   rangeValue?: number;
+  caption?: string; // small text under the title, e.g. "needs 4 nights"
 };
 
-export function MetricRow({ icon, title, value, trend, higherIsBetter = true, rangeValue }: MetricRowProps) {
+export function MetricRow({ icon, title, value, trend, higherIsBetter = true, rangeValue, caption }: MetricRowProps) {
   return (
     <View style={styles.root}>
       <View style={styles.row}>
         <View style={styles.iconCircle}>
           <Ionicons name={icon} size={18} color={colors.textPrimary} />
         </View>
-        <Text style={[typography.labelCaps, styles.title]} numberOfLines={1}>
-          {title}
-        </Text>
+        <View style={styles.title}>
+          <Text style={typography.labelCaps} numberOfLines={2}>
+            {title}
+          </Text>
+          {caption !== undefined && <Text style={typography.caption}>{caption}</Text>}
+        </View>
         <Text style={typography.metricValue}>{value}</Text>
         {trend !== undefined && <TrendArrow trend={trend} higherIsBetter={higherIsBetter} />}
       </View>

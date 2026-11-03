@@ -1,5 +1,3 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { SleepScreen } from '@/features/sleep/SleepScreen';
 
-export default function SleepRoute() {
-  return <PlaceholderScreen title="Sleep" promptNumber={2} showBack />;
-}
+export default SleepScreen;
