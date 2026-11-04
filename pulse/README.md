@@ -105,6 +105,7 @@ mock data.
 - **Activity names:** tap an activity on Home or Strain to name it. Names live in the `activity_names` table and are applied after scoring, so the scoring engine stays pure.
 - **Polish:** shared `SkeletonCard`, `EmptyState`, `ErrorState` and toast components; haptics in `src/utils/haptics.ts`; screen-reader labels on dials, buttons and chart cards; a quiet background sync when you return to the app after 15 minutes.
 - **App icon and splash:** run `npm run generate-icons` to redraw them from the logo.
+- **Visual fixes:** the ring illustration is now a tilted band with a visible opening and the green sensor light on its inner surface; the pairing spinner turns around the middle node of the line; toasts are a small pill just below the status bar.
 
 ## Testing checklist
 
@@ -118,9 +119,9 @@ npx expo-doctor
 
 Then on your iPhone in Expo Go:
 
-1. **First launch:** Device → Reset everything → Reset. You should see the welcome screen. Fill in your profile (CONTINUE stays disabled until it's valid), pair R02_341C (green check, haptic), and wait for the sync to land on Home.
+1. **First launch:** Device → Reset everything → Reset. You should see the welcome screen. Fill in your profile (CONTINUE stays disabled until it's valid), pair R02_341C (the blue spinner circles the middle dot, then a green check and a haptic), and wait for the sync to land on Home.
 2. **Splash:** close the app fully and reopen it. The logo should fade and grow in, then fade into Home.
-3. **Device tab:** SYNC NOW shows a spinner and a "Synced" toast; SET RING TIME shows "Ring time updated"; switch heart-rate logging and intervals; edit your age and see Max HR (auto) change.
+3. **Device tab:** SYNC NOW shows a spinner and a "Synced" toast; SET RING TIME shows "Ring time updated" in a small pill just under the status bar; the ring picture shows its opening and green sensor light; switch heart-rate logging and intervals; edit your age and see Max HR (auto) change.
 4. **Units:** switch to Imperial and check height and weight in the profile.
 5. **Regenerate mock data:** the numbers on Home change.
 6. **Rename an activity:** tap an activity on Home, pick a name, and see the new icon there and on Strain.

@@ -31,4 +31,18 @@ export const colors = {
   strainZones: ['#0A4F7A', '#0B6AA3', '#0093E7', '#3DB0F0', '#7FCBF6'],
   sheetBackdrop: 'rgba(0,0,0,0.6)',
   labelPill: 'rgba(11,14,17,0.85)', // dark backing behind chart labels that sit on bars
+  // Ring illustration: brushed dark metal, a darker inner surface and the green sensor light.
+  ringArt: {
+    rimLight: '#9AA5AF',
+    rimMid: '#4A545E',
+    rimDark: '#20272E',
+    bandLight: '#5E6872',
+    bandMid: '#262D34',
+    bandDark: '#0E1215',
+    inner: '#07090B',
+    innerEdge: '#2C343C',
+    sensorGlow: '#2DD37B',
+    sensorDot: '#7CF5B4',
+    shine: '#FFFFFF',
+  },
 } as const;
