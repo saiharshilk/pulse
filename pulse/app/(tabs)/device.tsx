@@ -1,5 +1,3 @@
-import { PlaceholderScreen } from '@/components/PlaceholderScreen';
+import { DeviceScreen } from '@/features/device/DeviceScreen';
 
-export default function DeviceRoute() {
-  return <PlaceholderScreen title="Device" promptNumber={4} />;
-}
+export default DeviceScreen;

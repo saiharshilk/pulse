@@ -4,6 +4,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { EmptyState } from '@/components/EmptyState';
 import { ScoreDial } from '@/components/ScoreDial';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { TopBar } from '@/components/TopBar';
@@ -53,35 +54,49 @@ export function HomeScreen() {
         <Text style={[typography.wordmark, styles.wordmark]}>{APP_NAME}</Text>
         {view.refreshErrorText !== null && <Text style={[typography.caption, styles.error]}>{view.refreshErrorText}</Text>}
 
-        <Animated.View style={[styles.sections, fadeStyle]}>
-          <View style={styles.dials}>
-            <ScoreDial {...view.sleepDial} size={dialSize} onPress={() => router.push('/sleep')} />
-            <ScoreDial {...view.recoveryDial} size={dialSize} onPress={() => router.push('/recovery')} />
-            <ScoreDial {...view.strainDial} size={dialSize} onPress={() => router.push('/strain')} />
+        {!view.hasData && (
+          <View style={styles.sections}>
+            <EmptyState
+              icon="sync-outline"
+              title="No data yet"
+              message="Sync with your ring to see your sleep, recovery and strain."
+              actionTitle={view.isRefreshing ? 'Syncing…' : 'Sync now'}
+              onAction={view.refresh}
+            />
           </View>
+        )}
 
-          <HomeSummaryCards
-            healthStatus={view.healthStatus}
-            stepsValue={view.stepsValue}
-            stepsProgress={view.stepsProgress}
-            stepsCaption={view.stepsCaption}
-          />
+        {view.hasData && (
+          <Animated.View style={[styles.sections, fadeStyle]}>
+            <View style={styles.dials}>
+              <ScoreDial {...view.sleepDial} size={dialSize} onPress={() => router.push('/sleep')} />
+              <ScoreDial {...view.recoveryDial} size={dialSize} onPress={() => router.push('/recovery')} />
+              <ScoreDial {...view.strainDial} size={dialSize} onPress={() => router.push('/strain')} />
+            </View>
 
-          <Text style={typography.screenTitle}>My Day</Text>
+            <HomeSummaryCards
+              healthStatus={view.healthStatus}
+              stepsValue={view.stepsValue}
+              stepsProgress={view.stepsProgress}
+              stepsCaption={view.stepsCaption}
+            />
 
-          <ActivitiesCard
-            activitiesTitle={view.activitiesTitle}
-            sleepRow={view.sleepRow}
-            activityRows={view.activityRows}
-            activitiesEmptyText={view.activitiesEmptyText}
-          />
+            <Text style={typography.screenTitle}>My Day</Text>
 
-          <HeartRateCard
-            value={view.heartRateValue}
-            caption={view.heartRateCaption}
-            sparklineValues={view.sparklineValues}
-          />
-        </Animated.View>
+            <ActivitiesCard
+              activitiesTitle={view.activitiesTitle}
+              sleepRow={view.sleepRow}
+              activityRows={view.activityRows}
+              activitiesEmptyText={view.activitiesEmptyText}
+            />
+
+            <HeartRateCard
+              value={view.heartRateValue}
+              caption={view.heartRateCaption}
+              sparklineValues={view.sparklineValues}
+            />
+          </Animated.View>
+        )}
       </ScrollView>
     </ScreenBackground>
   );

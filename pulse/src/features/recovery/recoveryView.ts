@@ -2,6 +2,7 @@
 import type { BarDatum } from '@/components/charts/BarChart';
 import type { ChartPoint } from '@/components/charts/chartMath';
 import { recoveryColor } from '@/features/home/homeView';
+import { barsSummary, rangeSummary } from '@/features/shared/accessibilityLabels';
 import { DETAIL } from '@/features/shared/detailConstants';
 import { recoveryInsight } from '@/insights/insightGenerator';
 import { colors } from '@/theme/colors';
@@ -23,6 +24,8 @@ export type RecoveryView = {
   sleepPerformanceTrend: Trend;
   insight: string | null;
   lastDays: BarDatum[];
+  lastDaysSummary: string;
+  restingLineSummary: string;
   restingLine: { data: ChartPoint[]; band?: { low: number; high: number }; startLabel: string; endLabel: string } | null;
 };
 
@@ -67,6 +70,12 @@ export function buildRecoveryView(summary: DailySummary | null, history: DailySu
   const recovery = summary?.recovery ?? null;
   const shared = {
     lastDays: lastDaysChart(history),
+    lastDaysSummary: barsSummary('Recovery over the last 7 days', lastDaysChart(history)),
+    restingLineSummary: rangeSummary(
+      'Resting heart rate over 30 days',
+      history.slice(-DETAIL.trendDays).flatMap((day) => (day.sleep === null ? [] : [day.sleep.restingHR])),
+      'bpm',
+    ),
     restingLine: restingLineChart(summary, history),
     calibrationText: '',
   };

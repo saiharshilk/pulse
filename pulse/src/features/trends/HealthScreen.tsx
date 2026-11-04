@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { EmptyState } from '@/components/EmptyState';
 import { FadeInSection } from '@/components/FadeInSection';
 import { ScreenBackground } from '@/components/ScreenBackground';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -24,7 +25,7 @@ export function HealthScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [range, setRange] = useState<TrendRange>(30);
-  const { cards } = useTrendsViewModel(range);
+  const { cards, hasData } = useTrendsViewModel(range);
 
   return (
     <ScreenBackground>
@@ -33,7 +34,10 @@ export function HealthScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: layout.tabBarClearance + insets.bottom }]}>
         <Text style={typography.screenTitle}>Health</Text>
         <SegmentedControl options={RANGE_OPTIONS} value={`${range}`} onChange={(key) => setRange(Number(key) as TrendRange)} />
-        {cards.map((card, i) => (
+        {!hasData && (
+          <EmptyState icon="stats-chart-outline" title="No trends yet" message="Trends appear after your first sync." />
+        )}
+        {hasData && cards.map((card, i) => (
           <FadeInSection key={card.key} index={i}>
             <TrendCard
               card={card}

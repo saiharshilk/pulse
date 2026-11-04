@@ -2,6 +2,7 @@
 import type { BarDatum } from '@/components/charts/BarChart';
 import type { ChartPoint } from '@/components/charts/chartMath';
 import type { HorizontalBarDatum } from '@/components/charts/HorizontalBars';
+import { barsSummary } from '@/features/shared/accessibilityLabels';
 import { DETAIL } from '@/features/shared/detailConstants';
 import { sleepInsight } from '@/insights/insightGenerator';
 import { SLEEP_BANDS } from '@/scoring/scoringConstants';
@@ -47,6 +48,8 @@ export type SleepView = {
   lastNights: BarDatum[];
   needTarget: { value: number; label: string } | null;
   hasLastNights: boolean;
+  timelineSummary: string;
+  lastNightsSummary: string;
 };
 
 export function performanceColor(performance: number): string {
@@ -55,7 +58,9 @@ export function performanceColor(performance: number): string {
   return colors.bandPoor;
 }
 
-function lastNightsChart(history: DailySummary[]): Pick<SleepView, 'lastNights' | 'needTarget' | 'hasLastNights'> {
+function lastNightsChart(
+  history: DailySummary[],
+): Pick<SleepView, 'lastNights' | 'needTarget' | 'hasLastNights' | 'lastNightsSummary'> {
   const days = history.slice(-DETAIL.historyDays);
   const nights = days.flatMap((day) => (day.sleep === null ? [] : [day.sleep]));
   const longest = Math.max(...nights.map((night) => night.timeAsleepMs / MS_PER_HOUR), 1);
@@ -77,6 +82,7 @@ function lastNightsChart(history: DailySummary[]): Pick<SleepView, 'lastNights' 
     needTarget:
       averageNeedMs === null ? null : { value: averageNeedMs / MS_PER_HOUR, label: `Need ${formatDuration(averageNeedMs)}` },
     hasLastNights: nights.length > 0,
+    lastNightsSummary: barsSummary('Hours asleep over the last 7 nights', lastNights),
   };
 }
 
@@ -109,6 +115,7 @@ export function buildSleepView(summary: DailySummary | null, history: DailySumma
       hoursAsleep: NO_VALUE,
       timeInBed: NO_VALUE,
       wakeUps: NO_VALUE,
+      timelineSummary: 'No sleep detected for this night.',
       restingHR: NO_VALUE,
       averageSleepingHR: NO_VALUE,
       needRows: [],
@@ -141,6 +148,7 @@ export function buildSleepView(summary: DailySummary | null, history: DailySumma
     hoursAsleep: formatDuration(sleep.timeAsleepMs),
     timeInBed: formatDuration(sleep.timeInBedMs),
     wakeUps: String(sleep.awakeIntervals.length),
+    timelineSummary: `Asleep ${formatDuration(sleep.timeAsleepMs)} between ${formatClockTime(sleep.bedtime)} and ${formatClockTime(sleep.wakeTime)}, with ${sleep.awakeIntervals.length} wake-ups.`,
     restingHR: formatBpm(sleep.restingHR),
     averageSleepingHR: formatBpm(sleep.averageSleepingHR),
     needRows: needRows(sleep),

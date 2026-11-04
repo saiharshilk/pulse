@@ -11,6 +11,7 @@ import { FadeInSection } from '@/components/FadeInSection';
 import { InsightCard } from '@/components/InsightCard';
 import { MetricRow } from '@/components/MetricRow';
 import { ScoreDial } from '@/components/ScoreDial';
+import { recoveryDialLabel } from '@/features/shared/accessibilityLabels';
 import { DETAIL } from '@/features/shared/detailConstants';
 import { colors } from '@/theme/colors';
 import { layout } from '@/theme/layout';
@@ -55,6 +56,7 @@ export function RecoveryScreen() {
             label={view.dialLabel}
             size={dialSize}
             placeholder={view.state !== 'scored'}
+            accessibilityLabel={recoveryDialLabel(view.state === 'scored' ? view.dialValue : null, view.state === 'calibrating')}
             large
           />
           {view.state === 'calibrating' && (
@@ -99,13 +101,13 @@ export function RecoveryScreen() {
       )}
 
       <FadeInSection index={3}>
-        <ChartCard title="Last 7 days">
+        <ChartCard title="Last 7 days" summary={view.lastDaysSummary}>
           <BarChart bars={view.lastDays} maxValue={100} height={layout.barChartHeight} />
         </ChartCard>
       </FadeInSection>
 
       <FadeInSection index={4}>
-        <ChartCard title="Resting heart rate · 30 days" emptyText={view.restingLine === null ? 'Not enough nights yet.' : null}>
+        <ChartCard title="Resting heart rate · 30 days" summary={view.restingLineSummary} emptyText={view.restingLine === null ? 'Not enough nights yet.' : null}>
           {view.restingLine !== null && (
             <LineChart {...view.restingLine} color={colors.recoveryRed} height={layout.lineChartHeight} maxGapMs={Infinity} />
           )}

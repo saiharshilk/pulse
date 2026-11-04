@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { ActivityRow, StrainBadge } from '@/components/ActivityRow';
@@ -9,7 +10,11 @@ import { LineChart } from '@/components/charts/LineChart';
 import { DetailScreen } from '@/components/DetailScreen';
 import { FadeInSection } from '@/components/FadeInSection';
 import { ScoreDial } from '@/components/ScoreDial';
+import { SkeletonCard } from '@/components/SkeletonCard';
 import { StatTile } from '@/components/StatTile';
+import { activityIcon } from '@/features/activities/activityIcons';
+import { ActivityNameSheet, type RenameTarget } from '@/features/activities/ActivityNameSheet';
+import { strainDialLabel } from '@/features/shared/accessibilityLabels';
 import { DETAIL } from '@/features/shared/detailConstants';
 import { colors } from '@/theme/colors';
 import { layout } from '@/theme/layout';
@@ -24,6 +29,7 @@ export function StrainScreen() {
   const view = useStrainViewModel();
   const { width } = useWindowDimensions();
   const dialSize = Math.min(width * layout.bigDialWidthRatio, DETAIL.bigDialMaxSize);
+  const [renaming, setRenaming] = useState<RenameTarget | null>(null);
 
   return (
     <DetailScreen title={view.dayLabel} infoTitle="Understand your Strain" info={STRAIN_INFO}>
@@ -35,6 +41,7 @@ export function StrainScreen() {
             valueText={view.scoreText}
             color={colors.strain}
             label={view.levelLabel}
+            accessibilityLabel={strainDialLabel(view.score)}
             size={dialSize}
             large
           />
@@ -72,21 +79,25 @@ export function StrainScreen() {
       </FadeInSection>
 
       <FadeInSection index={3}>
-        <ChartCard title="Heart rate" emptyText={view.heartRate.length < 2 ? 'No heart-rate readings for this day yet.' : null}>
-          <LineChart
-            data={view.heartRate}
-            color={colors.recoveryRed}
-            height={layout.lineChartHeight}
-            xDomain={view.heartRateWindow}
-            shadedRanges={view.activityRanges}
-            startLabel={view.heartRateStartLabel}
-            endLabel={view.heartRateEndLabel}
-          />
+        <ChartCard title="Heart rate" summary={view.heartRateSummary} emptyText={view.heartRate.length < 2 ? 'No heart-rate readings for this day yet.' : null}>
+          {view.isLoadingSamples ? (
+            <SkeletonCard lines={2} />
+          ) : (
+            <LineChart
+              data={view.heartRate}
+              color={colors.recoveryRed}
+              height={layout.lineChartHeight}
+              xDomain={view.heartRateWindow}
+              shadedRanges={view.activityRanges}
+              startLabel={view.heartRateStartLabel}
+              endLabel={view.heartRateEndLabel}
+            />
+          )}
         </ChartCard>
       </FadeInSection>
 
       <FadeInSection index={4}>
-        <ChartCard title="Heart rate zones">
+        <ChartCard title="Heart rate zones" summary={view.zonesSummary}>
           <HorizontalBars rows={view.zones} />
         </ChartCard>
       </FadeInSection>
@@ -96,22 +107,24 @@ export function StrainScreen() {
           {view.activities.map((activity) => (
             <ActivityRow
               key={activity.id}
-              icon="walk"
+              icon={activityIcon(activity.name)}
               iconColor={colors.strain}
               title={activity.name}
               timeRange={activity.timeRange}
               duration={activity.duration}
               badge={<StrainBadge value={activity.strain} />}
+              onPress={() => setRenaming({ id: activity.id, name: activity.name })}
             />
           ))}
         </ChartCard>
       </FadeInSection>
 
       <FadeInSection index={6}>
-        <ChartCard title="Last 7 days">
+        <ChartCard title="Last 7 days" summary={view.lastDaysSummary}>
           <BarChart bars={view.lastDays} maxValue={STRAIN_MAX} height={layout.barChartHeight} />
         </ChartCard>
       </FadeInSection>
+      <ActivityNameSheet target={renaming} onClose={() => setRenaming(null)} />
     </DetailScreen>
   );
 }

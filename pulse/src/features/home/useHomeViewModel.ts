@@ -53,6 +53,7 @@ export function useHomeViewModel() {
   return {
     ...buildHomeView(summary, profile, now),
     dayKey: selectedDayKey,
+    hasData: summaries.length > 0,
     canPrev: selectedIndex > 0,
     canNext: selectedIndex >= 0 && selectedIndex < summaries.length - 1,
     goPrevDay,

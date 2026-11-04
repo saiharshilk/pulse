@@ -2,6 +2,7 @@
 import type { BarDatum } from '@/components/charts/BarChart';
 import type { ChartPoint } from '@/components/charts/chartMath';
 import type { HorizontalBarDatum } from '@/components/charts/HorizontalBars';
+import { barsSummary } from '@/features/shared/accessibilityLabels';
 import { DETAIL } from '@/features/shared/detailConstants';
 import { strainInsight } from '@/insights/insightGenerator';
 import { HEART_RATE, STRAIN, STRAIN_BANDS } from '@/scoring/scoringConstants';
@@ -48,6 +49,9 @@ export type StrainView = {
   zones: HorizontalBarDatum[];
   activities: StrainActivityRow[];
   lastDays: BarDatum[];
+  heartRateSummary: string;
+  zonesSummary: string;
+  lastDaysSummary: string;
 };
 
 export function strainLevelLabel(score: number): string {
@@ -85,6 +89,14 @@ export function buildStrainView(
   const target = optimalStrainTarget(summary?.recovery?.score ?? null);
   const window = strain?.window ?? { start: 0, end: 1 };
 
+  const zones = zoneRows(strain?.zoneMinutes ?? HEART_RATE.zoneFloors.map(() => 0));
+  const lastDays = history.slice(-DETAIL.historyDays).map((day) => ({
+    label: formatWeekdayLetter(day.dayStart),
+    value: day.strain.score,
+    valueLabel: formatStrain(day.strain.score),
+    color: colors.strain,
+  }));
+
   return {
     score,
     scoreText: formatStrain(score),
@@ -104,7 +116,12 @@ export function buildStrainView(
     activityRanges: (summary?.activities ?? []).map((activity) => ({ start: activity.start, end: activity.end })),
     heartRateStartLabel: formatClockTime(window.start),
     heartRateEndLabel: formatClockTime(window.end),
-    zones: zoneRows(strain?.zoneMinutes ?? HEART_RATE.zoneFloors.map(() => 0)),
+    heartRateSummary:
+      strain === null || strain.averageHR === 0
+        ? 'No heart-rate readings for this day yet.'
+        : `Heart rate from ${formatClockTime(window.start)} to ${formatClockTime(window.end)}, average ${formatBpm(strain.averageHR)}, highest ${formatBpm(strain.maxHR)}.`,
+    zones,
+    zonesSummary: barsSummary('Time in each heart-rate zone', zones.map((zone) => ({ label: zone.label, valueLabel: zone.valueLabel }))),
     activities: (summary?.activities ?? []).map((activity) => ({
       id: activity.id,
       name: activity.name,
@@ -112,12 +129,8 @@ export function buildStrainView(
       duration: formatDuration(activity.end - activity.start),
       strain: formatStrain(activity.strainAdded),
     })),
-    lastDays: history.slice(-DETAIL.historyDays).map((day) => ({
-      label: formatWeekdayLetter(day.dayStart),
-      value: day.strain.score,
-      valueLabel: formatStrain(day.strain.score),
-      color: colors.strain,
-    })),
+    lastDays,
+    lastDaysSummary: barsSummary('Strain over the last 7 days', lastDays),
   };
 }
 

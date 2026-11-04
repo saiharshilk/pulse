@@ -147,7 +147,12 @@ export function detectSleepSession(input: SleepSessionInput): SleepSession | nul
   };
 }
 
-export type PriorNight = { bedtime: number; wakeTime: number; timeAsleepMs: number; sleepNeededMs: number };
+export type PriorNight = {
+  bedtime: number;
+  wakeTime: number;
+  timeAsleepMs: number;
+  needBreakdown: { baselineMs: number; strainMs: number };
+};
 
 export type SleepContext = {
   baselineHours: number;
@@ -164,7 +169,13 @@ export function calculateSleepNeed(context: SleepContext): SleepEstimate['needBr
   const shortfallMs = context.priorDays
     .slice(-SLEEP.debtLookbackNights)
     .reduce(
-      (total, night) => total + (night === null ? 0 : Math.max(0, night.sleepNeededMs - night.timeAsleepMs)),
+      (total, night) => {
+        if (night === null) return total;
+        // Measured against baseline + strain only. Counting earlier debt here would make debt
+        // feed on itself and never go away.
+        const needWithoutDebt = night.needBreakdown.baselineMs + night.needBreakdown.strainMs;
+        return total + Math.max(0, needWithoutDebt - night.timeAsleepMs);
+      },
       0,
     );
   const debtMs = Math.min(SLEEP.debtCapMinutes * MS_PER_MINUTE, SLEEP.debtFraction * shortfallMs);

@@ -1,18 +1,19 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { PillButton } from '@/components/PillButton';
+import { ErrorState } from '@/components/ErrorState';
 import { ScreenBackground } from '@/components/ScreenBackground';
-import { colors } from '@/theme/colors';
+import { SkeletonCard } from '@/components/SkeletonCard';
 import { layout } from '@/theme/layout';
 import { spacing } from '@/theme/spacing';
-import { typography } from '@/theme/typography';
 
 // Shown if loading continues after the native splash screen has gone (for example, on retry).
 export function InitLoadingView() {
   return (
     <ScreenBackground>
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.textPrimary} />
+      <View style={styles.content}>
+        <SkeletonCard lines={2} height={170} />
+        <SkeletonCard />
+        <SkeletonCard lines={4} />
       </View>
     </ScreenBackground>
   );
@@ -23,22 +24,14 @@ type InitErrorViewProps = { message: string; onRetry: () => void };
 export function InitErrorView({ message, onRetry }: InitErrorViewProps) {
   return (
     <ScreenBackground>
-      <View style={styles.center}>
-        <Text style={typography.body}>Something went wrong</Text>
-        <Text style={[typography.caption, styles.message]}>{message}</Text>
-        <PillButton title="Retry" onPress={onRetry} />
+      <View style={[styles.content, styles.center]}>
+        <ErrorState message={message} onRetry={onRetry} />
       </View>
     </ScreenBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.lg,
-    paddingHorizontal: layout.screenPadding,
-  },
-  message: { textAlign: 'center' },
+  content: { flex: 1, paddingHorizontal: layout.screenPadding, paddingTop: spacing.xxl, gap: spacing.lg },
+  center: { justifyContent: 'center' },
 });

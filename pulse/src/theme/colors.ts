@@ -30,4 +30,5 @@ export const colors = {
   // Zone 1 → Zone 5, each a little brighter than the last.
   strainZones: ['#0A4F7A', '#0B6AA3', '#0093E7', '#3DB0F0', '#7FCBF6'],
   sheetBackdrop: 'rgba(0,0,0,0.6)',
+  labelPill: 'rgba(11,14,17,0.85)', // dark backing behind chart labels that sit on bars
 } as const;

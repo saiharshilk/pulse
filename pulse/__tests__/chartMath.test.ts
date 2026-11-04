@@ -1,4 +1,4 @@
-import { niceDomain, niceStep, scaleLinear, splitAtGaps, toPolylinePoints } from '@/components/charts/chartMath';
+import { boxesOverlap, niceDomain, niceStep, paddedDomain, scaleLinear, splitAtGaps, toPolylinePoints } from '@/components/charts/chartMath';
 
 describe('chart math', () => {
   it('scales a value to pixels', () => {
@@ -28,5 +28,38 @@ describe('chart math', () => {
 
   it('builds polyline points', () => {
     expect(toPolylinePoints([{ x: 1, y: 2 }, { x: 3, y: 4 }], (x) => x * 10, (y) => y)).toBe('10,2 30,4');
+  });
+});
+
+describe('paddedDomain', () => {
+  it('always contains the data with room to spare', () => {
+    // 45 used to sit exactly on the bottom axis, so a 2-pixel line crossed it.
+    const domain = paddedDomain(45, 60);
+    expect(domain.min).toBeLessThan(45);
+    expect(domain.max).toBeGreaterThan(60);
+  });
+
+  it('widens a nearly flat series to the minimum span, centered', () => {
+    const domain = paddedDomain(71, 73, { minSpan: 20 });
+    expect(domain.max - domain.min).toBeGreaterThanOrEqual(20);
+    expect(domain.min).toBeLessThanOrEqual(62);
+    expect(domain.max).toBeGreaterThanOrEqual(82);
+  });
+
+  it('keeps the data inside for many ranges', () => {
+    for (const [min, max] of [[0, 1], [44.2, 57.9], [130, 175], [95, 99], [2000, 18000]]) {
+      const domain = paddedDomain(min, max);
+      expect(domain.min).toBeLessThan(min);
+      expect(domain.max).toBeGreaterThan(max);
+    }
+  });
+});
+
+describe('boxesOverlap', () => {
+  it('detects overlapping and separate boxes', () => {
+    const label = { x: 0, y: 10, width: 60, height: 14 };
+    expect(boxesOverlap(label, { x: 40, y: 20, width: 30, height: 14 })).toBe(true);
+    expect(boxesOverlap(label, { x: 70, y: 10, width: 30, height: 14 })).toBe(false);
+    expect(boxesOverlap(label, { x: 10, y: 30, width: 30, height: 14 })).toBe(false);
   });
 });

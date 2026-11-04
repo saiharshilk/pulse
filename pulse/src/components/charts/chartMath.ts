@@ -62,3 +62,34 @@ export function toPolylinePoints(
 ): string {
   return points.map((point) => `${toX(point.x)},${toY(point.y)}`).join(' ');
 }
+
+export const CHART_DOMAIN = {
+  padFraction: 0.1, // room above and below the data so lines never touch or cross an axis
+} as const;
+
+// A y-axis that always contains the data: padded by 10%, widened to `minSpan` around the middle
+// if the data is nearly flat, then rounded outward to nice numbers.
+export function paddedDomain(
+  min: number,
+  max: number,
+  { minSpan = 0, tickCount = 3 }: { minSpan?: number; tickCount?: number } = {},
+): { min: number; max: number; step: number } {
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return { min: 0, max: 1, step: 1 };
+  let low = Math.min(min, max);
+  let high = Math.max(min, max);
+  const pad = (high - low) * CHART_DOMAIN.padFraction;
+  low -= pad;
+  high += pad;
+  if (high - low < minSpan) {
+    const middle = (low + high) / 2;
+    low = middle - minSpan / 2;
+    high = middle + minSpan / 2;
+  }
+  return niceDomain(low, high, tickCount);
+}
+
+export type Box = { x: number; y: number; width: number; height: number };
+
+export function boxesOverlap(a: Box, b: Box): boolean {
+  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+}

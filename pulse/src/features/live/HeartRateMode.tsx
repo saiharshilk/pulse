@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { LineChart } from '@/components/charts/LineChart';
+import { ErrorState } from '@/components/ErrorState';
 import { PillButton } from '@/components/PillButton';
 import { StatTile } from '@/components/StatTile';
 import { colors } from '@/theme/colors';
@@ -8,6 +9,7 @@ import { layout } from '@/theme/layout';
 import { spacing } from '@/theme/spacing';
 import { typography } from '@/theme/typography';
 
+import { LIVE } from './liveMath';
 import { PulsingHeart } from './PulsingHeart';
 import type { useLiveViewModel } from './useLiveViewModel';
 
@@ -32,6 +34,7 @@ export function HeartRateMode({ view }: HeartRateModeProps) {
           startLabel="60 s ago"
           endLabel="now"
           animateReveal={false}
+          minYSpan={LIVE.chartMinSpanBpm}
         />
       </View>
 
@@ -41,8 +44,11 @@ export function HeartRateMode({ view }: HeartRateModeProps) {
         <StatTile value={view.max} caption="MAX" />
       </View>
 
-      {view.error !== null && <Text style={[typography.caption, styles.error]}>{view.error}</Text>}
-      <PillButton title={view.isRunning ? 'Stop' : 'Start'} onPress={view.isRunning ? view.stop : view.start} />
+      {view.error !== null ? (
+        <ErrorState message={view.error} onRetry={view.start} />
+      ) : (
+        <PillButton title={view.isRunning ? 'Stop' : 'Start'} onPress={view.isRunning ? view.stop : view.start} />
+      )}
     </View>
   );
 }
@@ -52,5 +58,4 @@ const styles = StyleSheet.create({
   hero: { alignItems: 'center', gap: spacing.xs },
   chart: { minHeight: layout.liveChartHeight },
   stats: { flexDirection: 'row', gap: spacing.sm },
-  error: { color: colors.warn, textAlign: 'center' },
 });

@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
 const DATABASE_NAME = 'pulse.db';
-const SCHEMA_VERSION = '2';
+const SCHEMA_VERSION = '3';
 // Rows per INSERT. Sending many rows at once is far faster than one async call per row.
 const INSERT_CHUNK_ROWS = 400;
 
@@ -10,6 +10,7 @@ const CREATE_TABLES_SQL = `
   CREATE TABLE IF NOT EXISTS steps (start INTEGER PRIMARY KEY, steps INTEGER, calories REAL, distance REAL);
   CREATE TABLE IF NOT EXISTS spo2_checks (ts INTEGER PRIMARY KEY, percent INTEGER);
   CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT);
+  CREATE TABLE IF NOT EXISTS activity_names (id TEXT PRIMARY KEY, name TEXT);
 `;
 
 let openPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -19,12 +20,28 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   await db.execAsync(CREATE_TABLES_SQL);
   // Migrations check this value and upgrade step by step.
   const stored = await db.getFirstAsync<{ value: string }>("SELECT value FROM kv WHERE key = 'schema_version'");
-  if (stored?.value === '1') {
-    // Version 2: the mock day plans changed. Clear the old readings so the next sync regenerates them.
+  if (stored?.value === '1' || stored?.value === '2') {
+    // Versions 2 and 3: the mock data changed (day plans, then daily step totals).
+    // Clear the old readings so the next sync regenerates them.
     await db.execAsync("DELETE FROM heart_rate; DELETE FROM steps; DELETE FROM kv WHERE key = 'lastSyncTs';");
   }
   await db.runAsync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', 'schema_version', SCHEMA_VERSION);
   return db;
+}
+
+// Deletes the ring's stored readings, so the next sync downloads them again.
+export async function clearRawReadings(): Promise<void> {
+  const db = await getDatabase();
+  await db.execAsync("DELETE FROM heart_rate; DELETE FROM steps; DELETE FROM kv WHERE key = 'lastSyncTs';");
+}
+
+// Deletes everything: readings, spot checks, activity names, profile and settings.
+export async function clearEverything(): Promise<void> {
+  const db = await getDatabase();
+  await db.execAsync(
+    'DELETE FROM heart_rate; DELETE FROM steps; DELETE FROM spo2_checks; DELETE FROM activity_names; DELETE FROM kv;',
+  );
+  await db.runAsync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', 'schema_version', SCHEMA_VERSION);
 }
 
 // Opens the database once and shares it. A failed open can be retried.

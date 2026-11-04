@@ -9,6 +9,7 @@ import { InsightCard } from '@/components/InsightCard';
 import { MetricRow } from '@/components/MetricRow';
 import { ScoreDial } from '@/components/ScoreDial';
 import { APP_NAME } from '@/config/appConfig';
+import { sleepDialLabel } from '@/features/shared/accessibilityLabels';
 import { DETAIL } from '@/features/shared/detailConstants';
 import { colors } from '@/theme/colors';
 import { layout } from '@/theme/layout';
@@ -45,6 +46,7 @@ export function SleepScreen() {
             size={dialSize}
             placeholder={!view.hasSleep}
             topLabel={APP_NAME}
+            accessibilityLabel={sleepDialLabel(view.hasSleep ? view.dialValue : null)}
             large
           />
         </View>

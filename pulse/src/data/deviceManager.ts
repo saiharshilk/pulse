@@ -39,6 +39,20 @@ export async function connectToRing(): Promise<void> {
   await setMeta(PAIRED_RING_KEY, JSON.stringify(ring));
 }
 
+// Pairing: look for nearby rings, then connect to the one picked and remember it.
+export function scanForRings(): Promise<DiscoveredRing[]> {
+  return getProvider().scan();
+}
+
+export async function pairRing(ring: DiscoveredRing): Promise<void> {
+  await getProvider().connect(ring);
+  await setMeta(PAIRED_RING_KEY, JSON.stringify(ring));
+}
+
+export function disconnectRing(): Promise<void> {
+  return getProvider().disconnect();
+}
+
 export function getDeviceInfo(): Promise<DeviceInfo> {
   return getProvider().getDeviceInfo();
 }

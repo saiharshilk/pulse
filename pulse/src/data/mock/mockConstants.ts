@@ -19,8 +19,6 @@ export const MOCK_HISTORY = {
   stepBucketMinutes: 15,
   caloriesPerStep: 0.04,
   metersPerStep: 0.75,
-  minDailySteps: 4000,
-  maxDailySteps: 14000,
   missingReadingChance: 0.02,
   chargingDayChance: 4 / 60,
 } as const;
@@ -96,4 +94,19 @@ export const MOCK_ACTIVITY = {
   wakeUpStepsPerBucket: { min: 10, max: 40 },
   chargingStart: { min: 780, max: 960 }, // 13:00–16:00
   chargingMinutes: { min: 60, max: 120 },
+} as const;
+
+// Each day's step total is drawn from a range that suits the kind of day, so totals vary
+// naturally instead of piling up at one ceiling.
+export const MOCK_STEPS = {
+  dailyTarget: {
+    desk: { min: 5000, max: 8000 },
+    walking: { min: 8000, max: 13000 },
+    workout: { min: 7000, max: 12000 },
+    hard: { min: 8000, max: 13000 },
+  },
+  lazyDayChance: 0.2, // of desk days
+  lazyDay: { min: 2500, max: 4000 },
+  bigDayChance: 0.1, // of walking and workout days
+  bigDay: { min: 15000, max: 18000 },
 } as const;
