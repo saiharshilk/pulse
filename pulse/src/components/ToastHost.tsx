@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,7 +16,8 @@ const ICONS: Record<ToastKind, { name: 'checkmark-circle' | 'alert-circle' | 'in
   info: { name: 'information-circle', color: colors.link },
 };
 
-// Shows the current toast at the top of the screen and hides it after 2 seconds.
+// Shows the current toast as a small pill just below the status bar and hides it after 2 seconds.
+// It hugs the status bar and stays narrow so it doesn't sit on top of screen titles.
 // Rendered once, in the root layout, above every screen.
 export function ToastHost() {
   const toast = useToastStore((state) => state.toast);
@@ -38,28 +39,35 @@ export function ToastHost() {
       exiting={FadeOutUp.duration(200)}
       pointerEvents="none"
       accessibilityLiveRegion="polite"
-      style={[styles.toast, { top: insets.top + spacing.sm }]}>
-      <Ionicons name={icon.name} size={18} color={icon.color} />
-      <Text style={[typography.body, styles.text]}>{toast.message}</Text>
+      style={[styles.slot, { top: insets.top + layout.toastTopGap }]}>
+      <View style={styles.pill}>
+        <Ionicons name={icon.name} size={layout.toastIconSize} color={icon.color} />
+        <Text style={[typography.body, styles.text]} numberOfLines={2}>
+          {toast.message}
+        </Text>
+      </View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  toast: {
+  slot: {
     position: 'absolute',
     left: layout.screenPadding,
     right: layout.screenPadding,
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: layout.cardRadius,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: layout.toastPaddingVertical,
+    borderRadius: layout.toastRadius,
     backgroundColor: colors.card,
     borderColor: colors.cardStroke,
     borderWidth: 1,
-    zIndex: 1000,
   },
-  text: { flex: 1, fontSize: 15 },
+  text: { flexShrink: 1, fontSize: 14 },
 });

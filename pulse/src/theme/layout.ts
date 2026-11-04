@@ -71,6 +71,10 @@ export const layout = {
 
   // Feedback and loading
   toastMs: 2000,
+  toastTopGap: 4, // space between the status bar and the toast
+  toastIconSize: 16,
+  toastPaddingVertical: 6,
+  toastRadius: 18, // half the pill's one-line height, so the ends are round
   skeletonPulseMs: 800,
 
   // Splash intro and onboarding
